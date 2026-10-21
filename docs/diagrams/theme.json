@@ -1,0 +1,15 @@
+{
+  "theme": "base",
+  "securityLevel": "strict",
+  "themeVariables": {
+    "fontFamily": "Segoe UI, Microsoft YaHei, Arial, sans-serif",
+    "fontSize": "17px",
+    "primaryColor": "#eef2ff",
+    "primaryTextColor": "#172b4d",
+    "primaryBorderColor": "#818cf8",
+    "lineColor": "#64748b",
+    "secondaryColor": "#e0f2fe",
+    "tertiaryColor": "#f1f5f9"
+  },
+  "flowchart": { "htmlLabels": false, "curve": "basis", "padding": 18 }
+}

@@ -1,0 +1,22 @@
+flowchart TD
+    A[在 Codex 中描述目标] --> B{任务范围}
+    B -->|清晰的小修复| C[确认范围和验收标准]
+    C --> D[实施修复]
+    B -->|新功能或重要未知项| E[Grilling 澄清目标和取舍]
+    E --> F{还有技术问题未解决?}
+    F -->|有| G[OpenSpec explore 调查未知项]
+    F -->|没有| H[设计方案并阅读候选 skills]
+    G --> H
+    H --> I[OpenSpec propose 固化方案]
+    I --> J[用户审阅并明确要求实施]
+    J --> K[安装选中的项目 skills]
+    K --> L[阅读 codebase-design 并执行 apply]
+    D --> M[验证行为并分别审查规范和需求]
+    L --> M
+    M --> N{有阻塞问题?}
+    N -->|有| O[修复并重新验证相关行为]
+    O --> M
+    N -->|没有| P{存在 OpenSpec change?}
+    P -->|有| Q[在已授权范围内同步规范并归档]
+    P -->|没有| R[交付结果并说明限制]
+    Q --> R

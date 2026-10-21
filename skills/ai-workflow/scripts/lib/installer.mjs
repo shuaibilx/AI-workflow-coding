@@ -112,8 +112,9 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
   const mainPath = await locateSkill(home, 'ai-workflow');
   const mainTarget = join(home, '.agents', 'skills', 'ai-workflow');
   const runningFromInstalledSkill = mainPath && await realpath(source) === await realpath(mainPath);
+  const identicalUnmanagedSkill = mainPath && state.main?.path !== mainPath && await digestTree(mainPath) === sourceDigest;
   let mainAction = mainPath ? 'skip' : 'install';
-  if (mainPath && !runningFromInstalledSkill && command !== 'doctor') {
+  if (mainPath && !runningFromInstalledSkill && !identicalUnmanagedSkill && command !== 'doctor') {
     if (!state.main || state.main.path !== mainPath) throw new Error(`Unmanaged ai-workflow exists at ${mainPath}; it will not be overwritten.`);
     if ((await lstat(mainPath)).isSymbolicLink() || await digestTree(mainPath) !== state.main.digest) throw new Error(`Managed ai-workflow was locally modified: ${mainPath}`);
     if (sourceDigest !== state.main.digest) mainAction = 'update';

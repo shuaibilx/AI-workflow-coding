@@ -30,30 +30,9 @@ OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with com
 
 ## See the workflow
 
-```mermaid
-flowchart TD
-    A[Describe the goal in Codex] --> B{Task scope}
-    B -->|Clear small fix| C[Confirm scope and acceptance]
-    C --> D[Implement the fix]
-    B -->|Feature or material uncertainty| E[Grilling: clarify goals and tradeoffs]
-    E --> F{Unresolved technical questions?}
-    F -->|Yes| G[OpenSpec explore: investigate unknowns]
-    F -->|No| H[Design and inspect candidate skills]
-    G --> H
-    H --> I[OpenSpec propose: capture the plan]
-    I --> J[You review and request implementation]
-    J --> K[Install selected project skills]
-    K --> L[Read codebase-design and apply the change]
-    D --> M[Verify behavior and review Standards + Spec]
-    L --> M
-    M --> N{Blocking problems?}
-    N -->|Yes| O[Fix and recheck affected behavior]
-    O --> M
-    N -->|No| P{OpenSpec change?}
-    P -->|Yes| Q[Sync specs and archive within authorized scope]
-    P -->|No| R[Deliver results and limitations]
-    Q --> R
-```
+![workflow diagram](assets/workflow.en.svg)
+
+[Mermaid source](docs/diagrams/workflow.en.mmd)
 
 The full path pauses after the proposal for your implementation request. The subsequent implementation can include verification, review/fixes, spec synchronization, and archive. Material scope changes return to a decision; routine steps continue within the authority already given.
 
@@ -105,16 +84,9 @@ $ai-workflow Continue the existing CSV export change from its current state.
 
 ## What gets installed
 
-```mermaid
-flowchart LR
-    A[Installation entry] --> B[Global AI Workflow skill]
-    A --> C[Missing global base skills]
-    A --> D[Missing OpenSpec CLI]
-    C --> E[grilling and find-skills]
-    C --> F[codebase-design and code-review]
-    G[Explicit project setup] --> H[OpenSpec config and generated project skills]
-    I[Approved technology choices] --> J[Selected project skills]
-```
+![installation diagram](assets/installation.en.svg)
+
+[Mermaid source](docs/diagrams/installation.en.mmd)
 
 | Item | Location / behavior |
 | --- | --- |
@@ -193,6 +165,8 @@ npm pack --dry-run
 ```
 
 The package has no runtime npm dependencies; it invokes fixed external tool versions when needed. Integration downloads require network access. See [publishing](docs/publishing.md) for release and Skills.sh checks.
+
+Diagrams are pre-rendered SVGs so they remain visible without GitHub's interactive Mermaid renderer. Edit their [Mermaid sources](docs/diagrams), then run `node scripts/render-diagrams.mjs`. Set `PUPPETEER_EXECUTABLE_PATH` to use an existing Chromium/Edge installation; otherwise the rendering tool uses its normal browser setup. Rendering is a maintainer tool and adds no dependency to the installed skill.
 
 Skills.sh discovers public GitHub skills through normal `skills add` installation telemetry. Search/ranking updates are controlled by that service, and immediate indexing is not guaranteed. See the [official FAQ](https://www.skills.sh/docs/faq).
 

@@ -1,0 +1,22 @@
+flowchart TD
+    A[Describe the goal in Codex] --> B{Task scope}
+    B -->|Clear small fix| C[Confirm scope and acceptance]
+    C --> D[Implement the fix]
+    B -->|Feature or material uncertainty| E[Grilling: clarify goals and tradeoffs]
+    E --> F{Unresolved technical questions?}
+    F -->|Yes| G[OpenSpec explore: investigate unknowns]
+    F -->|No| H[Design and inspect candidate skills]
+    G --> H
+    H --> I[OpenSpec propose: capture the plan]
+    I --> J[You review and request implementation]
+    J --> K[Install selected project skills]
+    K --> L[Read codebase-design and apply the change]
+    D --> M[Verify behavior and review Standards + Spec]
+    L --> M
+    M --> N{Blocking problems?}
+    N -->|Yes| O[Fix and recheck affected behavior]
+    O --> M
+    N -->|No| P{OpenSpec change?}
+    P -->|Yes| Q[Sync specs and archive within authorized scope]
+    P -->|No| R[Deliver results and limitations]
+    Q --> R

@@ -165,6 +165,15 @@ test('a skill installed by skills add can bootstrap from its own directory', asy
   assert.match(await readFile(join(f.home, '.agents', 'skills', 'grilling', 'SKILL.md'), 'utf8'), /upstream/);
 });
 
+test('the package installer can reuse an identical workflow installed independently', async (t) => {
+  const f = await fixture(t);
+  const { cp } = await import('node:fs/promises');
+  await cp(join(f.packageRoot, 'skills', 'ai-workflow'), join(f.home, '.agents', 'skills', 'ai-workflow'), { recursive: true });
+  const result = await f.invoke();
+  assert.equal(result.ok, true);
+  assert.match(await readFile(join(f.home, '.agents', 'skills', 'grilling', 'SKILL.md'), 'utf8'), /upstream/);
+});
+
 test('update refuses to overwrite local edits in a managed third-party skill', async (t) => {
   const f = await fixture(t);
   await f.invoke();

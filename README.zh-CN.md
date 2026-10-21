@@ -30,30 +30,9 @@ OpenSpec 提供变更和规范管理机制，AI Workflow 负责将它与其他�
 
 ## 看一遍完整流程
 
-```mermaid
-flowchart TD
-    A[在 Codex 中描述目标] --> B{任务范围}
-    B -->|清晰的小修复| C[确认范围和验收标准]
-    C --> D[实施修复]
-    B -->|新功能或重要未知项| E[Grilling 澄清目标和取舍]
-    E --> F{还有技术问题未解决?}
-    F -->|有| G[OpenSpec explore 调查未知项]
-    F -->|没有| H[设计方案并阅读候选 skills]
-    G --> H
-    H --> I[OpenSpec propose 固化方案]
-    I --> J[用户审阅并明确要求实施]
-    J --> K[安装选中的项目 skills]
-    K --> L[阅读 codebase-design 并执行 apply]
-    D --> M[验证行为并分别审查规范和需求]
-    L --> M
-    M --> N{有阻塞问题?}
-    N -->|有| O[修复并重新验证相关行为]
-    O --> M
-    N -->|没有| P{存在 OpenSpec change?}
-    P -->|有| Q[在已授权范围内同步规范并归档]
-    P -->|没有| R[交付结果并说明限制]
-    Q --> R
-```
+![workflow diagram](assets/workflow.zh-CN.svg)
+
+[Mermaid source](docs/diagrams/workflow.zh-CN.mmd)
 
 完整流程在提案展示后等待用户明确启动实施。后续实施可以包含验证、审查与修复、规范同步和归档。实质性的范围变化返回决策步骤，常规步骤则在已有授权内连续推进。
 
@@ -105,16 +84,9 @@ $ai-workflow 从现有状态继续 CSV 导出变更。
 
 ## 安装了什么
 
-```mermaid
-flowchart LR
-    A[安装入口] --> B[全局 AI Workflow skill]
-    A --> C[缺少的全局基础 skills]
-    A --> D[缺少的 OpenSpec CLI]
-    C --> E[grilling 和 find-skills]
-    C --> F[codebase-design 和 code-review]
-    G[明确的项目初始化] --> H[OpenSpec 配置和生成的项目技能]
-    I[已确认的技术选型] --> J[选中的项目 skills]
-```
+![installation diagram](assets/installation.zh-CN.svg)
+
+[Mermaid source](docs/diagrams/installation.zh-CN.mmd)
 
 | 内容 | 位置与行为 |
 | --- | --- |
@@ -193,6 +165,8 @@ npm pack --dry-run
 ```
 
 包本身没有运行时 npm 依赖，需要时调用固定版本的外部工具。下载依赖的集成验证需要联网。发布和 Skills.sh 检查见 [发布说明](docs/publishing.md)。
+
+图表预先渲染为 SVG，不依赖 GitHub 的交互式 Mermaid 渲染器。修改 [Mermaid 源文件](docs/diagrams) 后，执行 `node scripts/render-diagrams.mjs`。可设置 `PUPPETEER_EXECUTABLE_PATH` 使用已有 Chromium／Edge；未设置时由渲染工具按默认方式准备浏览器。渲染仅供维护者使用，不增加已安装 skill 的依赖。
 
 Skills.sh 通过正常 `skills add` 安装产生的遥测发现公开 GitHub 技能。搜索和排名更新时间由服务决定，不保证立即收录。参见 [官方 FAQ](https://www.skills.sh/docs/faq)。
 

@@ -7,7 +7,7 @@
   "bin": { "ai-workflow": "bin/ai-workflow.mjs" },
   "engines": { "node": ">=22.20.0" },
   "scripts": { "test": "node --test", "test:integration": "node scripts/smoke.mjs", "check": "node --check bin/ai-workflow.mjs && node --check skills/ai-workflow/scripts/cli.mjs && node --check skills/ai-workflow/scripts/lib/installer.mjs && node --check skills/ai-workflow/scripts/lib/system.mjs" },
-  "files": ["bin/", "skills/", "docs/", "README.md", "README.zh-CN.md"],
+  "files": ["bin/", "skills/", "docs/", "assets/", "README.md", "README.zh-CN.md"],
   "repository": { "type": "git", "url": "git+https://github.com/shuaibilx/AI-workflow-coding.git" },
   "license": "MIT"
 }

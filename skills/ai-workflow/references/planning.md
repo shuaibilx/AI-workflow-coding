@@ -45,6 +45,8 @@ For the normal spec-driven schema, transfer:
 
 Use the actual schema rather than forcing these names on every project. Record the selected skills with source and reason in the existing design artifact; do not create a second long plan or an exhaustive catalog.
 
+Keep synchronization/archive as closure follow-ups outside tracked implementation tasks, unless the schema explicitly separates their lifecycle. A tracked task to archive the change would otherwise prevent the pre-archive task-completion check from ever passing.
+
 Present the artifacts, outstanding decisions, planned checks, and the delivery scope. The default full delivery includes implementation, verification, review/fixes, spec synchronization, and archive after all completion conditions pass. The user can narrow that scope.
 
 Stop after presenting the proposal and wait for a new request to implement. Only then leave actual Plan mode through available host controls or explain that the user must switch it. Do not promise that a skill can toggle host modes itself.
