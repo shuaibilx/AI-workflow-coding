@@ -30,11 +30,18 @@ OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with com
 
 ## See the workflow
 
-![workflow diagram](assets/workflow.en.svg)
+```mermaid
+flowchart LR
+    A[Describe the goal] --> B[Clarify and design]
+    B --> C[OpenSpec proposal]
+    C -->|Start implementation| D[Implement]
+    D --> E[Verify and review]
+    E --> F[Deliver]
+    A -->|Small fix| D
+    E -->|Fix findings| D
+```
 
-[Mermaid source](docs/diagrams/workflow.en.mmd)
-
-The full path pauses after the proposal for your implementation request. The subsequent implementation can include verification, review/fixes, spec synchronization, and archive. Material scope changes return to a decision; routine steps continue within the authority already given.
+Clarification combines grilling, optional exploration, and inspection of candidate skills. The full path pauses after the OpenSpec proposal for your implementation request. Implementation includes installing the selected project skills and applying the design; verification and review lead back to fixes when needed. Full changes finish with spec synchronization and archive within the authorized scope. A clear small fix skips the planning stages.
 
 ## Quick start
 
@@ -84,9 +91,7 @@ $ai-workflow Continue the existing CSV export change from its current state.
 
 ## What gets installed
 
-![installation diagram](assets/installation.en.svg)
-
-[Mermaid source](docs/diagrams/installation.en.mmd)
+The installer adds AI Workflow, missing global base skills (`grilling`, `find-skills`, `codebase-design`, and `code-review`), and the OpenSpec CLI. Project setup and technology-specific skills are handled separately:
 
 | Item | Location / behavior |
 | --- | --- |
@@ -166,7 +171,7 @@ npm pack --dry-run
 
 The package has no runtime npm dependencies; it invokes fixed external tool versions when needed. Integration downloads require network access. See [publishing](docs/publishing.md) for release and Skills.sh checks.
 
-Diagrams are pre-rendered SVGs so they remain visible without GitHub's interactive Mermaid renderer. Edit their [Mermaid sources](docs/diagrams), then run `node scripts/render-diagrams.mjs`. Set `PUPPETEER_EXECUTABLE_PATH` to use an existing Chromium/Edge installation; otherwise the rendering tool uses its normal browser setup. Rendering is a maintainer tool and adds no dependency to the installed skill.
+The workflow diagram is Mermaid code embedded directly in this README and rendered by GitHub. Keep the English and Chinese diagrams aligned when editing them.
 
 Skills.sh discovers public GitHub skills through normal `skills add` installation telemetry. Search/ranking updates are controlled by that service, and immediate indexing is not guaranteed. See the [official FAQ](https://www.skills.sh/docs/faq).
 
