@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": "0.1.0",
+  "selectedAt": "2026-10-21",
+  "skillsCli": { "version": "1.7.4" },
+  "openspec": { "package": "@fission-ai/openspec", "version": "1.14.3" },
+  "skills": [
+    { "name": "grilling", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" },
+    { "name": "find-skills", "repository": "vercel-labs/skills", "ref": "a80e4c9d12d607631249d4d7d059f835d4b2f13a" },
+    { "name": "codebase-design", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" },
+    { "name": "code-review", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" }
+  ]
+}

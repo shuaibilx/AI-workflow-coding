@@ -1,0 +1,3 @@
+interface:
+  display_name: "AI Workflow"
+  short_description: "Clarify, plan, build, verify, and review with Codex"
