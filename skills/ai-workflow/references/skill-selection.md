@@ -14,11 +14,31 @@ For each serious candidate, inspect its actual `SKILL.md`, supporting scripts wh
 
 Reject redundant or conflicting skills. A technology in the stack does not automatically require a skill. If no suitable skill exists, record the gap and use project documentation and official technical sources; do not install a weak match just to fill a checklist.
 
+## Workflow-specific candidates
+
+Use these triggers to decide which additional skills belong in a task's proposal. They are not all baseline dependencies:
+
+| Skill | Select when | Workflow boundary |
+| --- | --- | --- |
+| `tdd` | The user asks for test-first work, or a behavior change benefits from a red/green loop | Agree public test seams before writing tests; record them in the proposal for full changes. |
+| `diagnosing-bugs` | A bug is difficult to reproduce, a regression has multiple plausible causes, or performance regressed | Build and run a symptom-specific feedback loop before hypothesizing; follow its cleanup and regression-test rules. A clear small fix may skip phases only with explicit justification. |
+| `research` | External, version-sensitive, or otherwise uncertain technical facts could change a decision | Follow the skill's background-research and primary-source citation requirements; save one findings note in the repo's existing notes location and link relevant conclusions from OpenSpec. |
+| `domain-modeling` | The change resolves domain language or establishes a durable domain/architecture decision | Update a glossary lazily and keep it free of implementation details; create ADRs only for hard-to-reverse, surprising decisions with real trade-offs. |
+| `writing-for-agents` | Editing this workflow, another skill, `AGENTS.md`/`CLAUDE.md`, or agent-facing documentation | Read `SKILL-MECHANICS.md` when authoring a skill; keep task instructions and conditional references progressively disclosed. |
+| `create-pull-request` | The user explicitly requests commit/push or opening a GitHub PR | Use only for the requested operation after verification/review where applicable, with `gh` installed and authenticated; adapt its instructions to the host and repository. Never force-push by default. |
+| `babysit-pr` | The user explicitly asks to monitor an already-open GitHub PR's CI and review feedback | This is post-creation monitoring. Monitoring is read-only unless the user also authorizes fixes, reruns, or pushes. Read its complete skill and bundled scripts before use. |
+
+`pr` is the standard dependency for full workflows and drafts a PR body after checks, review, and OpenSpec closure. It never creates or publishes the PR. `setup-matt-pocock-skills` is an opt-in, user-invoked, once-per-repository onboarding path only when the user chooses the broader Matt Pocock engineering conventions. It is not required by OpenSpec: treat the tracker as backlog/triage, OpenSpec as the current change plan, and glossary/ADR files as durable domain knowledge. Respect the setup skill's own confirmation and file-selection rules.
+
+`code-review` already covers a local branch/PR diff against Standards and Spec. It produces a review report; it does not submit an approval or inline review to GitHub. Do not add another generic reviewer unless the user specifically wants reviews posted to the remote. Repository initialization (`git init`) is a small setup operation handled by [delivery.md](delivery.md), not a reason to install a low-fit skill.
+
+Do not route to `prototype` in this workflow. Use `openspec-explore` for unresolved design questions.
+
 Summarize the selected names, sources, version/ref when available, purpose, and relevant conflicts in the proposal's design. Reopen a technology decision only if the new evidence materially changes its tradeoffs.
 
 ## Install after selection
 
-Once the proposal is ready, install the selected skills during an authorized setup/implementation phase. A new dependency that changes the confirmed stack or scope returns to the decision step first. Respect actual host Plan mode restrictions.
+Once the proposal is ready, install selected implementation skills during an authorized setup/implementation phase. The user explicitly requesting GitHub delivery or monitoring an existing PR also authorizes selecting the corresponding delivery skill for that requested operation; no OpenSpec proposal is needed for a standalone delivery/follow-up request. A new dependency that changes the confirmed stack or scope returns to the decision step first. Respect actual host Plan mode restrictions.
 
 From the code project's root, use a source-specific command such as:
 

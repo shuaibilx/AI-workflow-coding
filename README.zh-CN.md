@@ -33,26 +33,37 @@ OpenSpec 提供变更和规范管理机制，AI Workflow 负责将它与其他�
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":18,"rankSpacing":35,"wrappingWidth":180}}}%%
 flowchart LR
-    G[描述目标]:::start --> C["1. 澄清<br/><span style='color:#174ea6'><b>grilling</b></span> · 需求与验收<br/><span style='color:#174ea6'><b>Plan mode</b></span> · 复杂任务<br/><span style='color:#174ea6'><b>explore</b></span> · 未决问题"]:::stage
-    C --> P["2. 提案<br/><span style='color:#174ea6'><b>find-skills</b></span> · 技术匹配<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 模块接口<br/><span style='color:#174ea6'><b>propose</b></span> · 决策与任务"]:::stage
-    P -->|用户要求实施| I["3. 实施<br/><span style='color:#174ea6'><b>apply-change</b></span> · 任务<br/><span style='color:#174ea6'><b>项目技能</b></span> · 技术栈指导<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 接口"]:::stage
-    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更"]:::stage
+    G[描述目标]:::start --> C["1. 澄清<br/><span style='color:#174ea6'><b>grilling</b></span> · 需求与验收<br/><span style='color:#174ea6'><b>Plan mode</b></span> · 复杂任务<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · 未决事实"]:::stage
+    C --> P["2. 规划与提案<br/><span style='color:#174ea6'><b>find-skills</b></span> · 技能匹配<br/><span style='color:#174ea6'><b>research</b></span> · 未确定的外部事实<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · 长期术语/决策<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 模块接口<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · 决策与任务"]:::stage
+    P -->|用户要求实施| I["3. 实施<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · 任务<br/><span style='color:#174ea6'><b>tdd</b></span> · 已确认的测试 seam<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · 难复现 Bug/性能回退<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · 仅 agent 文档"]:::stage
+    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更<br/><span style='color:#174ea6'><b>pr</b></span> · 仅起草 PR 文案"]:::stage
     G -->|小修复| I
     V -->|修复并复查| I
+    G -.->|用户要求初始化仓库| R["可选 Git 设置<br/><span style='color:#174ea6'><b>delivery.md</b></span> · git init + origin"]:::optional
+    R -.-> C
+    V -.->|用户明确要求 GitHub 交付| D["可选 GitHub 交付<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · commit/push 或创建 PR"]:::optional
+    D -.->|用户明确要求持续跟进| M["已创建 PR 的跟进<br/><span style='color:#174ea6'><b>babysit-pr</b></span> · CI + 审查反馈"]:::optional
+    G -.->|用户选择仓库配置| S["可选仓库引导<br/><span style='color:#174ea6'><b>setup-matt-pocock-skills</b></span> · tracker + 领域文档"]:::optional
+    S -.-> C
     classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
     classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
+    classDef optional fill:#fff7ed,stroke:#f97316,color:#7c2d12,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
-蓝色文字表示各阶段使用的技能和工具，普通文字说明其作用。
+蓝色文字表示技能和工具，普通文字说明其作用和触发条件。虚线分支均为可选流程，需由用户主动触发。在新增的技能中，只有 `pr` 纳入常规全局依赖；其他任务专用技能在命中时安装到项目中。
 
-Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求尚不明确的任务；它不会产生第二份事实来源。只有仍有问题待查时，才用 `openspec-explore` 调查代码库事实或方案可行性。OpenSpec 提案记录已确认的决策、选中的技能和任务，展示后等待用户要求实施。小修复直接进入实施和审查；完整变更在检查通过后同步规范并归档。
+Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求尚不明确的任务；它不会产生第二份事实来源。只有仍有问题待查时，才用 `openspec-explore` 调查代码库事实或方案可行性。OpenSpec 提案记录已确认的决策、选中的技能、测试 seam 和任务，展示后等待用户要求实施。小修复直接进入实施和审查；完整变更在检查通过后同步规范并归档，然后起草 PR 文案；提交、push 和创建 PR 都是单独的可选动作。设计问题未解决时使用 `openspec-explore`；本工作流不路由到 `prototype`。
 
 | 阶段 | 技能与工具 | 作用 |
 | --- | --- | --- |
-| 澄清 | `grilling`；Codex Plan mode（可选）；`openspec-explore`（可选） | 明确范围与验收；复杂任务时推演实现路径；调查尚未解决的代码库事实或可行性。 |
-| 提案 | `find-skills`；`codebase-design`；`openspec-propose` | 评估候选技能、梳理模块接口，并生成唯一正式提案和任务计划。 |
-| 实施 | `openspec-apply-change`；选中的项目技能；`codebase-design` | 按 OpenSpec 任务实施，结合技术栈技能和已确定的接口设计。 |
-| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change` | 验证行为，审查规范与需求，修复并复查问题，然后同步规范并归档完整变更。 |
+| 澄清 | `grilling`；Codex Plan mode（可选）；仍有未知时用 `openspec-explore` | 明确范围与验收；复杂任务时推演实现路径；调查尚未解决的代码库事实或可行性。 |
+| 规划与提案 | `find-skills`；按需 `research`、`domain-modeling`；`codebase-design`；`openspec-propose` | 定稿前评估候选技能；需要时记录带引用的研究、长期领域术语和测试 seam，再生成唯一正式提案和任务计划。 |
+| 实施 | `openspec-apply-change`；按需 `tdd`、`diagnosing-bugs`；仅编辑 agent 文档时用 `writing-for-agents` | 结合已确认的测试 seam、系统化 Bug 复现或 agent 文档规范完成任务。 |
+| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change`；`pr` | 验证行为，在本地审查规范与需求，修复并复查问题，同步并归档完整变更，然后起草 PR 文案。 |
+| 可选 Git 设置 | 用户明确要求时参考 `delivery.md` | 仅在用户要求仓库初始化时运行 `git init` 或添加 remote。 |
+| 可选 GitHub 交付 | 用户明确要求时用 `create-pull-request` | 仅执行用户明确要求的操作：提交、push 或创建 PR。 |
+| 可选 PR 跟进 | 用户明确要求时用 `babysit-pr` | 跟进已创建 PR 的 CI 和已发布审查反馈；按其安全规则修复时可能 push。 |
+| 可选仓库引导 | 用户主动选择时使用 `setup-matt-pocock-skills` | 一次性配置更广泛的 Matt Pocock 工程约定；OpenSpec 不依赖它。 |
 
 ## 快速开始
 
@@ -102,17 +113,20 @@ $ai-workflow 从现有状态继续 CSV 导出变更。
 
 ## 安装了什么
 
-安装器添加 AI Workflow、缺少的全局基础技能（`grilling`、`find-skills`、`codebase-design`、`code-review`）和 OpenSpec CLI。项目初始化及技术栈专用技能另行处理：
+安装器添加 AI Workflow、缺少的全局工作流技能（`grilling`、`find-skills`、`codebase-design`、`code-review`、`pr`）和 OpenSpec CLI。任务专用技能及可选仓库配置另行处理：
 
 | 内容 | 位置与行为 |
 | --- | --- |
-| AI Workflow 和基础技能 | 用户 `.agents/skills/`；也检测旧位置 `.codex/skills/` 中的已有依赖 |
+| AI Workflow 和常规技能 | 用户 `.agents/skills/`；也检测旧位置 `.codex/skills/` 中的已有依赖 |
 | OpenSpec CLI | npm 全局；保留已有 CLI |
 | OpenSpec 项目文件 | 仅在明确选定的项目中初始化 |
-| 技术栈专用技能 | 规划时选择，安装到项目 `.agents/skills/` |
+| 任务专用技能（`tdd`、`diagnosing-bugs`、`research`、`domain-modeling`、`writing-for-agents`、`create-pull-request`、`babysit-pr` 或更匹配的候选项） | 按任务选择，获准后安装到项目 `.agents/skills/` |
+| `setup-matt-pocock-skills` | 可选、由用户主动调用的一次性仓库引导；不是 OpenSpec 的前置条件 |
 | 安装器的托管记录 | 用户 `.ai-workflow/state.json`，与 skills CLI 的锁文件分开 |
 
 第三方 skill 从各自上游仓库下载，来源和固定 Git commit 记录在 [dependencies.json](skills/ai-workflow/config/dependencies.json)。本 skill 不打包第三方源文件副本。
+
+完整流程默认使用 `pr` 根据最终 diff 和实际验证证据起草 PR 文案。提交、push 和创建 PR 是独立可选动作：`create-pull-request` 只执行用户明确要求的操作；只有用户要求持续跟进已创建 PR 时才使用 `babysit-pr`。Git 初始化由工作流自己的仓库引导说明处理，不增加额外依赖。其他新增 skill 仅在触发条件匹配时选择；可选 setup 将 issue tracker 留给 backlog/triage，不替代 OpenSpec 的变更计划。
 
 已有但不归本安装器托管的技能会被复用和保留，更新时也不会覆盖。目录存在不等于来源或兼容性已确认。安装器仅记录自己安装的依赖，并在更新托管内容前检查本地修改。
 
@@ -156,6 +170,7 @@ skills/ai-workflow/
 │   ├── skill-selection.md      技能筛选和项目安装
 │   ├── implementation.md       实施与范围变化
 │   ├── review.md               验证、双轴审查和收尾
+│   ├── delivery.md             Git 初始化与可选 GitHub 交付
 │   └── resume.md               恢复已有进度
 ├── scripts/                    跨平台安装程序
 ├── config/dependencies.json    带版本的依赖来源
@@ -177,6 +192,7 @@ Codex 进入相应阶段时读取对应说明，主入口不会一次加载全�
 ```sh
 npm test
 npm run check
+npm run test:integration
 npm pack --dry-run
 ```
 

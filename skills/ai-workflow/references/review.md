@@ -36,3 +36,7 @@ Respect CLI-returned paths and store selection. Wait for spec synchronization to
 ## Delivery
 
 Report what changed and why, checks and their results, the two review axes, any remaining limitations, and the archive/spec result when applicable. Do not publish, deploy, push, or merge unless that external action was separately requested.
+
+For a full workflow, after successful verification/review and authorized OpenSpec synchronization/archive, read and use the installed `pr` skill to draft a PR body from the final change. Follow its Summary, Evidence, and Merge Danger structure. Include actual before/after signals when available, verified after-results, merge direction, and blast radius; disclose missing baseline evidence instead of inventing it. Do not publish or create the PR. Skip this automatic draft for small fixes; the user can request one separately.
+
+If the user explicitly requests GitHub delivery, continue with [delivery.md](delivery.md) after drafting the body. If the user asks to monitor an already-open PR, use the `babysit-pr` route there; do not confuse a local `code-review` report with a posted GitHub review.

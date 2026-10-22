@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { execute } from '../skills/ai-workflow/scripts/lib/installer.mjs';
 
 // External package downloads/CLI execution are replaced; all local file effects are real.
-async function fixture(t, { failDownload = false, existingCli = true, activateCli = true } = {}) {
+async function fixture(t, { failDownload = false, existingCli = true, activateCli = true, skillDependencies = [{ name: 'grilling', repository: 'mattpocock/skills', ref: 'a'.repeat(40) }] } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'ai workflow 中文 '));
   t.after(() => rm(root, { recursive: true, force: true }));
   const home = join(root, 'user');
@@ -22,7 +22,7 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
     schemaVersion: 1, workflowVersion: '0.1.0',
     skillsCli: { version: '1.7.4' },
     openspec: { package: '@fission-ai/openspec', version: '1.14.3' },
-    skills: [{ name: 'grilling', repository: 'mattpocock/skills', ref: 'a'.repeat(40) }],
+    skills: skillDependencies,
   }));
   const calls = [];
   let cliAvailable = existingCli;
@@ -63,6 +63,25 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
   const invoke = (options = {}) => execute({ command: 'install', home, skillRoot, ...options }, { run, log: () => {} });
   return { root, home, packageRoot, project, run, calls, invoke };
 }
+
+test('the bundled manifest installs pr and leaves conditional skills opt-in', async (t) => {
+  const manifestPath = new URL('../skills/ai-workflow/config/dependencies.json', import.meta.url);
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const pr = manifest.skills.find((skill) => skill.name === 'pr');
+  assert.ok(pr, 'pr must be part of the standard dependency set');
+  assert.equal(pr.repository, 'mattpocock/skills');
+  assert.match(pr.ref, /^[a-f0-9]{40}$/);
+  for (const name of ['tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents', 'setup-matt-pocock-skills']) {
+    assert.equal(manifest.skills.some((skill) => skill.name === name), false, `${name} must remain conditional`);
+  }
+
+  const f = await fixture(t, { skillDependencies: manifest.skills });
+  await f.invoke();
+  const call = f.calls.find(({ args }) => args.includes('--skill') && args[args.indexOf('--skill') + 1] === 'pr');
+  assert.ok(call, 'the installer must fetch the declared PR skill');
+  assert.ok(call.args.includes('--global'));
+  assert.equal(call.args[call.args.indexOf('add') + 1], `https://github.com/${pr.repository}/tree/${pr.ref}`);
+});
 
 test('dry-run shows missing dependencies without creating user files or downloading', async (t) => {
   const f = await fixture(t);

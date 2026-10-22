@@ -13,6 +13,8 @@ For a small fix, the user's fix request normally authorizes the scoped edit. Sta
 3. If no Git baseline exists, note that limitation and keep a bounded list of relevant files and initial observations. Do not initialize Git without a request merely to satisfy a review dependency.
 4. Install the project skills selected in the plan, when authorized; use [skill-selection.md](skill-selection.md).
 
+Follow the selected skills at their relevant seams. With `tdd`, use only the user-confirmed public test seams and work in red/green vertical slices. With `diagnosing-bugs`, do not jump to a cause before its symptom-specific loop is red-capable; preserve redaction and cleanup requirements. When `domain-modeling` is selected, update resolved glossary terms inline and keep implementation decisions in OpenSpec unless they meet the ADR criteria. When editing agent instructions or skills, use `writing-for-agents`; do not load it for ordinary product-code changes.
+
 ## Execute the selected route
 
 For a full change, load and follow `openspec-apply-change`. Query current status and apply instructions, then read the CLI's concrete context paths. Respect blocked states, custom schemas, selected stores, and incomplete artifacts. Do not infer readiness from a single `tasks.md` or file-existence status.

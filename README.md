@@ -33,26 +33,37 @@ OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with com
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":18,"rankSpacing":35,"wrappingWidth":180}}}%%
 flowchart LR
-    G[Describe goal]:::start --> C["1. Clarify<br/><span style='color:#174ea6'><b>grilling</b></span> · requirements<br/><span style='color:#174ea6'><b>Plan mode</b></span> · complex work<br/><span style='color:#174ea6'><b>explore</b></span> · unknowns"]:::stage
-    C --> P["2. Propose<br/><span style='color:#174ea6'><b>find-skills</b></span> · tech fit<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces<br/><span style='color:#174ea6'><b>propose</b></span> · decisions + tasks"]:::stage
-    P -->|User requests implementation| I["3. Implement<br/><span style='color:#174ea6'><b>apply-change</b></span> · tasks<br/><span style='color:#174ea6'><b>Project skills</b></span> · stack guidance<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces"]:::stage
-    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes"]:::stage
+    G[Describe goal]:::start --> C["1. Clarify<br/><span style='color:#174ea6'><b>grilling</b></span> · requirements<br/><span style='color:#174ea6'><b>Plan mode</b></span> · complex work<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · unresolved facts"]:::stage
+    C --> P["2. Plan + propose<br/><span style='color:#174ea6'><b>find-skills</b></span> · skill fit<br/><span style='color:#174ea6'><b>research</b></span> · uncertain external facts<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · lasting terms/decisions<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · decisions + tasks"]:::stage
+    P -->|User requests implementation| I["3. Implement<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · tasks<br/><span style='color:#174ea6'><b>tdd</b></span> · agreed test seams<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · hard bugs/perf regressions<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · agent docs only"]:::stage
+    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes<br/><span style='color:#174ea6'><b>pr</b></span> · PR draft only"]:::stage
     G -->|Small fix| I
     V -->|Fix and recheck| I
+    G -.->|User asks for repository setup| R["Optional Git setup<br/><span style='color:#174ea6'><b>delivery.md</b></span> · git init + origin"]:::optional
+    R -.-> C
+    V -.->|User explicitly requests delivery| D["Optional GitHub delivery<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · commit/push or open PR"]:::optional
+    D -.->|User explicitly requests monitoring| M["Open PR follow-up<br/><span style='color:#174ea6'><b>babysit-pr</b></span> · CI + review feedback"]:::optional
+    G -.->|Opt-in repository setup| S["Optional onboarding<br/><span style='color:#174ea6'><b>setup-matt-pocock-skills</b></span> · tracker + domain docs"]:::optional
+    S -.-> C
     classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
     classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
+    classDef optional fill:#fff7ed,stroke:#f97316,color:#7c2d12,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
-Blue labels identify the skills and tools used at each stage; regular text describes their role.
+Blue labels identify skills and tools; regular text describes their role and trigger. Dashed branches are optional and user-invoked. Of the additional skills, only `pr` joins the standard global dependency set; the other task-specific skills are installed in the project when selected.
 
-Plan mode is an optional Codex aid for complex, risky, or underspecified work; it does not create a second source of truth. `openspec-explore` investigates repository facts or feasibility only when questions remain. The OpenSpec proposal carries confirmed decisions, selected skills, and tasks, then waits for your implementation request. Small fixes go straight to implementation and review. Full changes sync specs and archive after checks pass.
+Plan mode is an optional Codex aid for complex, risky, or underspecified work; it does not create a second source of truth. `openspec-explore` investigates repository facts or feasibility only when questions remain. The OpenSpec proposal carries confirmed decisions, selected skills, test seams, and tasks, then waits for your implementation request. Small fixes go straight to implementation and review. Full changes sync specs and archive after checks pass, then draft PR text; commit, push, and PR creation remain separate opt-in actions. Unresolved design questions use `openspec-explore`; this workflow does not route to `prototype`.
 
 | Stage | Skills and tools | Role |
 | --- | --- | --- |
-| Clarify | `grilling`; Codex Plan mode (optional); `openspec-explore` (optional) | Clarify scope and acceptance; reason through complex paths; investigate unresolved repository facts or feasibility. |
-| Propose | `find-skills`; `codebase-design`; `openspec-propose` | Assess candidate skills, shape module interfaces, and create the authoritative proposal and task plan. |
-| Implement | `openspec-apply-change`; selected project skills; `codebase-design` | Execute OpenSpec tasks with stack-specific guidance and the agreed interfaces. |
-| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change` | Verify behavior, review standards and spec, fix and recheck findings, then sync and archive full changes. |
+| Clarify | `grilling`; Codex Plan mode (optional); `openspec-explore` (when unknowns remain) | Clarify scope and acceptance; reason through complex paths; investigate unresolved repository facts or feasibility. |
+| Plan and propose | `find-skills`; `research` and `domain-modeling` (when triggered); `codebase-design`; `openspec-propose` | Assess candidates before the proposal; capture cited research, durable domain language, test seams, decisions, and tasks where relevant. |
+| Implement | `openspec-apply-change`; `tdd` or `diagnosing-bugs` (when triggered); `writing-for-agents` (agent docs only); `codebase-design` | Execute tasks with confirmed test seams, a disciplined bug loop, or agent-document guidance as appropriate. |
+| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change`; `pr` | Verify behavior, review standards and spec locally, fix and recheck findings, sync/archive full changes, then draft PR text. |
+| Optional Git setup | `delivery.md` (explicit request) | Initialize a local repository or add a remote only when the user asks for repository setup. |
+| Optional GitHub delivery | `create-pull-request` (explicit request) | Commit/push only when requested; create a PR only when the user asks to open one. |
+| Optional PR monitoring | `babysit-pr` (explicit request) | Follow CI and published review feedback on an existing PR; may push branch fixes under its safety rules. |
+| Optional onboarding | `setup-matt-pocock-skills` (explicit user opt-in) | Configure the broader Matt Pocock repository conventions once; it is not required for OpenSpec. |
 
 ## Quick start
 
@@ -102,17 +113,20 @@ $ai-workflow Continue the existing CSV export change from its current state.
 
 ## What gets installed
 
-The installer adds AI Workflow, missing global base skills (`grilling`, `find-skills`, `codebase-design`, and `code-review`), and the OpenSpec CLI. Project setup and technology-specific skills are handled separately:
+The installer adds AI Workflow, missing global workflow skills (`grilling`, `find-skills`, `codebase-design`, `code-review`, and `pr`), and the OpenSpec CLI. Task-specific skills and optional repository setup are handled separately:
 
 | Item | Location / behavior |
 | --- | --- |
-| AI Workflow and base skills | User `.agents/skills/`; existing legacy `.codex/skills/` dependencies are detected too |
+| AI Workflow and standard skills | User `.agents/skills/`; existing legacy `.codex/skills/` dependencies are detected too |
 | OpenSpec CLI | npm global; an existing CLI is preserved |
 | OpenSpec project files | Initialized only in an explicitly selected project |
-| Technology-specific skills | Project `.agents/skills/`, selected during planning |
+| Task-specific skills (`tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`, `create-pull-request`, `babysit-pr`, or a better-fit candidate) | Project `.agents/skills/`, selected for the task and installed when authorized |
+| `setup-matt-pocock-skills` | Optional, user-invoked repository onboarding; not an OpenSpec prerequisite |
 | Installer ownership record | User `.ai-workflow/state.json`; separate from the skills CLI's own lock |
 
 Third-party skills are downloaded from their original repositories. Their sources and fixed Git commits are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json). We do not vendor their source into this skill.
+
+On full workflows, `pr` drafts a PR body from the final diff and verified evidence. Commit, push, and PR creation are separate opt-in actions: `create-pull-request` is used only for the operation the user requested. `babysit-pr` is reserved for monitoring an existing PR when requested. Git initialization is handled by the workflow's setup guidance, not an extra dependency. The other listed skills are selected only when their task triggers fit; the optional setup skill keeps issue tracking for backlog/triage and does not replace OpenSpec's change plan.
 
 Existing unmanaged skills are reused and preserved, including during dependency updates. A directory's presence does not establish its provenance or compatibility. The installer records ownership only for dependencies it installs and detects edits before updating managed content.
 
@@ -156,6 +170,7 @@ skills/ai-workflow/
 │   ├── skill-selection.md      Candidate review and project installation
 │   ├── implementation.md       Apply and scope changes
 │   ├── review.md               Checks, two-axis review, and closure
+│   ├── delivery.md             Git setup and opt-in GitHub delivery
 │   └── resume.md               Recover the current state
 ├── scripts/                    Cross-platform installer
 ├── config/dependencies.json    Versioned dependency sources
@@ -177,6 +192,7 @@ Codex reads the relevant reference when entering that phase. The entrypoint does
 ```sh
 npm test
 npm run check
+npm run test:integration
 npm pack --dry-run
 ```
 

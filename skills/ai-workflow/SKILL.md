@@ -33,13 +33,16 @@ Carry confirmed decisions from discovery into implementation and verified delive
 | Propose | OpenSpec artifacts reflect the confirmed decisions; present them and wait for a new implementation request | [implementation.md](references/implementation.md) |
 | Implement | Read `codebase-design`; implement the selected change and keep task progress accurate | [implementation.md](references/implementation.md) |
 | Verify and review | Actual check results, Standards and Spec findings, fixes and relevant rechecks | [review.md](references/review.md) |
-| Close | Within the implementation scope authorized by the user, sync specs and archive only after completion checks pass | [review.md](references/review.md) |
+| Close | Within the implementation scope authorized by the user, sync specs and archive only after completion checks pass; full workflows then draft PR text | [review.md](references/review.md) |
+| Optional GitHub delivery | User explicitly requests repository initialization, commit/push, PR creation, or open-PR monitoring | [delivery.md](references/delivery.md) |
 
 ## Coordination rules
 
 - Use the installed dependency skills; resolve their actual `SKILL.md` paths and read them at the point of use. Do not copy their full instructions into this workflow or invent skill tool calls.
 - Reuse facts and decisions already established. OpenSpec explore is conditional; it does not create state required by propose.
 - Keep the approved OpenSpec artifacts authoritative. Transfer discovery conclusions into them instead of maintaining a second detailed implementation plan.
+- In a full workflow, use `pr` after verification, review, and OpenSpec closure to draft the PR body from the final change and actual evidence. This does not create or publish a PR; small fixes do not get a draft automatically.
+- Git initialization and GitHub delivery are separate opt-in actions. Only load [delivery.md](references/delivery.md) when the user asks for repository setup, commit/push, PR creation, or PR monitoring; never infer permission to publish from a completed implementation.
 - Distinguish a planning phase from the host's actual Plan mode. Use real mode controls only when available; never claim to have switched modes by writing text.
 - Installing this skill does not execute its scripts. A workflow request is not permission to update global dependencies or publish/deploy. Reuse explicit setup and implementation authorization already given.
 - If a dependency's workflow would introduce a new stop or conflict, first check existing user instructions and authorization. Explain any remaining real requirement with the exact source; do not silently bypass it or ask again for authorization already granted.

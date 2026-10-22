@@ -32,6 +32,12 @@ Read `codebase-design` before choosing module interfaces and seams. Respect exis
 
 Read [skill-selection.md](skill-selection.md). Search and inspect relevant skill candidates now, before finalizing the design. Their recommendations can change the technology choice or implementation approach. Keep installation until the proposal is ready and setup/implementation is authorized.
 
+Apply the task-specific planning triggers from `skill-selection.md` before proposing:
+
+- When external or fast-changing technical facts could change the design, use `research` before locking the proposal. Follow its background-agent, primary-source, and cited-note requirements, then point to material findings from the OpenSpec design. If host Plan mode prevents writing the note, collect sources read-only and finish the note only after moving to a write-capable phase; do not claim the research handoff is complete until the note exists.
+- When domain terms or relationships need durable clarification, use `domain-modeling`. Keep the glossary to domain language and reserve ADRs for hard-to-reverse, surprising trade-offs; OpenSpec remains the plan for this change.
+- When `tdd` fits, identify proposed public test seams and what each seam catches or misses. Confirm them with the user before writing tests, and carry the agreed seams into the OpenSpec design/tasks.
+
 ## Capture one authoritative plan
 
 Resolve and read the project's `openspec-propose`. Pass the confirmed decision summary and candidate skill selection into it. Use CLI-returned roots, schema requirements, and output paths; do not assume artifacts always live in the code repo.
