@@ -37,7 +37,7 @@ node "<absolute-skill-directory>/scripts/cli.mjs" install
 | Task-specific skills such as `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, and `writing-for-agents` | Project `.agents/skills` | Selected during planning and installed when authorized |
 | `create-pull-request`, `babysit-pr` | Project `.agents/skills` | Optional GitHub delivery/follow-up skills; install only when the user requests that phase |
 
-Existing skills in both user `.agents/skills` and legacy `.codex/skills` locations are preserved. Their presence does not prove a known source or version; report them as existing/unmanaged. The installer only updates dependencies it previously installed, and refuses to overwrite edits it can detect. Do not automatically adopt, delete, or replace unmanaged content.
+Existing skills in both user `.agents/skills` and legacy `.codex/skills` locations are preserved. Their presence does not prove a known source or version; report them as existing/unmanaged. If an unmanaged `ai-workflow` already exists, skip replacing it and continue installing any missing declared dependencies. The installer only updates dependencies it previously installed, and refuses to overwrite edits it can detect. Do not automatically adopt, delete, or replace unmanaged content.
 
 `setup-matt-pocock-skills` is an optional, user-invoked repository onboarding path, not a prerequisite for OpenSpec. Offer it only when the user opts into the broader Matt Pocock engineering conventions. Keep its issue tracker for backlog/triage, OpenSpec as the current change plan, and glossary/ADR documents for durable domain knowledge; follow its own confirmation rules before writing project setup files.
 

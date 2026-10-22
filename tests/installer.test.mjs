@@ -124,13 +124,15 @@ test('existing user skills in the legacy Codex location are preserved even by up
   assert.equal(f.calls.some((call) => call.args.includes('add')), false);
 });
 
-test('an unmanaged main skill is never overwritten', async (t) => {
+test('an unmanaged main skill is preserved while missing dependencies are installed', async (t) => {
   const f = await fixture(t);
   const target = join(f.home, '.agents', 'skills', 'ai-workflow');
   await mkdir(target, { recursive: true });
   await writeFile(join(target, 'SKILL.md'), 'my workflow');
-  await assert.rejects(f.invoke(), /unmanaged|未托管/i);
+  const result = await f.invoke();
+  assert.equal(result.items.find((item) => item.name === 'ai-workflow').action, 'skip');
   assert.equal(await readFile(join(target, 'SKILL.md'), 'utf8'), 'my workflow');
+  assert.match(await readFile(join(f.home, '.agents', 'skills', 'grilling', 'SKILL.md'), 'utf8'), /upstream/);
 });
 
 test('a download failure does not record the dependency as successfully installed', async (t) => {
