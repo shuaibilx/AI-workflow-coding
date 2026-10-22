@@ -142,20 +142,29 @@ node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" init --project "/absolut
 
 Windows 的项目参数可写成 `C:/work/my-project`。使用自定义 Codex 安装位置或项目级技能时，先确定实际 skill 路径。
 
-更新主 skill：
+使用 `skills` CLI，按名称更新通过该 CLI 安装的 skill。以下命令会全局更新工作流和常用基础 skill：
 
 ```sh
-npx skills add https://github.com/shuaibilx/AI-workflow-coding --skill ai-workflow --global --agent codex
+npx --yes --package=skills@1.7.4 skills update ai-workflow --global --yes
+npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review pr --global --yes
 ```
 
-再更新本安装器托管的依赖：
+`skills update` 会使用安装时记录的来源。对于手动安装且没有来源记录的 skill（例如 `grilling`），从原仓库重新添加即可更新：
+
+```sh
+npx --yes --package=skills@1.7.4 skills add https://github.com/mattpocock/skills --skill grilling --global --agent codex --yes
+```
+
+更新会替换已安装的文件；如果你修改过 skill 内容，请先备份。
+
+如需只更新由 AI Workflow 安装器记录为托管的依赖，运行：
 
 ```sh
 node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" update --dry-run
 node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" update
 ```
 
-默认采用当前发布版声明的版本和 commit。显式添加 `--latest` 才跟随上游最新版本，该通道未经兼容性验证。日常开发不会自动升级依赖。
+此命令只更新由本安装器安装并记录的依赖；已有但未托管的 skill 会保留。默认采用当前发布版声明的版本和 commit。显式添加 `--latest` 才跟随上游最新版本，该通道未经兼容性验证。日常开发不会自动升级依赖。
 
 OpenSpec CLI 升级后，刷新项目内的生成指令是另一个明确操作：在目标项目执行 `openspec update`。安装器不会悄悄刷新所有项目。
 

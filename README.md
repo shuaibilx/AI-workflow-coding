@@ -142,20 +142,29 @@ node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" init --project "/absolut
 
 On Windows, provide a Windows project path such as `C:/work/my-project`. Resolve the actual skill path when using a custom Codex installation or project-scoped skills.
 
-To update the main skill from this repository:
+Update skills installed with the `skills` CLI by name. The following commands refresh the workflow and standard skills globally:
 
 ```sh
-npx skills add https://github.com/shuaibilx/AI-workflow-coding --skill ai-workflow --global --agent codex
+npx --yes --package=skills@1.7.4 skills update ai-workflow --global --yes
+npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review pr --global --yes
 ```
 
-Then update the dependencies managed by this installer:
+`skills update` uses the source recorded when each skill was installed. For a manually installed skill without a recorded source, such as `grilling`, refresh it by adding it again from its repository:
+
+```sh
+npx --yes --package=skills@1.7.4 skills add https://github.com/mattpocock/skills --skill grilling --global --agent codex --yes
+```
+
+Back up local edits before updating a skill; an update replaces its installed files.
+
+To update only dependencies recorded as managed by the AI Workflow installer, run:
 
 ```sh
 node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" update --dry-run
 node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" update
 ```
 
-Default updates use this release's declared versions/commits. Add `--latest` to explicitly resolve current upstream versions; that channel has not been compatibility-verified. No dependency updates run automatically during ordinary development.
+This command updates dependencies installed and tracked by this installer; pre-existing unmanaged skills are preserved. Default updates use this release's declared versions/commits. Add `--latest` to explicitly resolve current upstream versions; that channel has not been compatibility-verified. No dependency updates run automatically during ordinary development.
 
 After an OpenSpec CLI upgrade, project instruction refresh is a separate deliberate operation (`openspec update` in the selected project). The installer does not silently refresh every project.
 
