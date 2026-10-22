@@ -31,14 +31,19 @@ OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with com
 ## See the workflow
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":18,"rankSpacing":35,"wrappingWidth":180}}}%%
 flowchart LR
-    A[Describe goal] --> B["1. Clarify<br/>grilling · requirements<br/>Plan mode · complex path<br/>explore · open questions"]
-    B --> C["2. Propose<br/>find-skills · candidates<br/>design · interfaces<br/>propose · tasks"]
-    C -->|User requests implementation| D["3. Implement<br/>apply-change · tasks<br/>Project skills · stack guidance<br/>design · interfaces"]
-    D --> E["4. Verify + close<br/>Checks · behavior<br/>code-review · standards/spec<br/>sync + archive · full changes"]
-    A -->|Small fix| D
-    E -->|Fix and recheck| D
+    G[Describe goal]:::start --> C["1. Clarify<br/><span style='color:#174ea6'><b>grilling</b></span> · requirements<br/><span style='color:#174ea6'><b>Plan mode</b></span> · complex work<br/><span style='color:#174ea6'><b>explore</b></span> · unknowns"]:::stage
+    C --> P["2. Propose<br/><span style='color:#174ea6'><b>find-skills</b></span> · tech fit<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces<br/><span style='color:#174ea6'><b>propose</b></span> · decisions + tasks"]:::stage
+    P -->|User requests implementation| I["3. Implement<br/><span style='color:#174ea6'><b>apply-change</b></span> · tasks<br/><span style='color:#174ea6'><b>Project skills</b></span> · stack guidance<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces"]:::stage
+    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes"]:::stage
+    G -->|Small fix| I
+    V -->|Fix and recheck| I
+    classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
+    classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
 ```
+
+Blue labels identify the skills and tools used at each stage; regular text describes their role.
 
 Plan mode is an optional Codex aid for complex, risky, or underspecified work; it does not create a second source of truth. `openspec-explore` investigates repository facts or feasibility only when questions remain. The OpenSpec proposal carries confirmed decisions, selected skills, and tasks, then waits for your implementation request. Small fixes go straight to implementation and review. Full changes sync specs and archive after checks pass.
 

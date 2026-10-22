@@ -31,14 +31,19 @@ OpenSpec 提供变更和规范管理机制，AI Workflow 负责将它与其他�
 ## 看一遍完整流程
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":18,"rankSpacing":35,"wrappingWidth":180}}}%%
 flowchart LR
-    A[描述目标] --> B["1. 澄清<br/>grilling · 需求与验收<br/>Plan mode · 复杂任务<br/>explore · 未决问题"]
-    B --> C["2. 提案<br/>find-skills · 候选技能<br/>design · 模块接口<br/>propose · 决策与任务"]
-    C -->|用户要求实施| D["3. 实施<br/>apply-change · 执行任务<br/>项目技能 · 技术栈<br/>design · 接口"]
-    D --> E["4. 验证与收尾<br/>检查 · 行为<br/>code-review · 规范与需求<br/>sync + archive · 完整变更"]
-    A -->|小修复| D
-    E -->|修复并复查| D
+    G[描述目标]:::start --> C["1. 澄清<br/><span style='color:#174ea6'><b>grilling</b></span> · 需求与验收<br/><span style='color:#174ea6'><b>Plan mode</b></span> · 复杂任务<br/><span style='color:#174ea6'><b>explore</b></span> · 未决问题"]:::stage
+    C --> P["2. 提案<br/><span style='color:#174ea6'><b>find-skills</b></span> · 技术匹配<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 模块接口<br/><span style='color:#174ea6'><b>propose</b></span> · 决策与任务"]:::stage
+    P -->|用户要求实施| I["3. 实施<br/><span style='color:#174ea6'><b>apply-change</b></span> · 任务<br/><span style='color:#174ea6'><b>项目技能</b></span> · 技术栈指导<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 接口"]:::stage
+    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更"]:::stage
+    G -->|小修复| I
+    V -->|修复并复查| I
+    classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
+    classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
 ```
+
+蓝色文字表示各阶段使用的技能和工具，普通文字说明其作用。
 
 Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求尚不明确的任务；它不会产生第二份事实来源。只有仍有问题待查时，才用 `openspec-explore` 调查代码库事实或方案可行性。OpenSpec 提案记录已确认的决策、选中的技能和任务，展示后等待用户要求实施。小修复直接进入实施和审查；完整变更在检查通过后同步规范并归档。
 
