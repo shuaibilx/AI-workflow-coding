@@ -32,16 +32,22 @@ OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with com
 
 ```mermaid
 flowchart LR
-    A[Describe the goal] --> B[Clarify and design]
-    B --> C[OpenSpec proposal]
-    C -->|Start implementation| D[Implement]
-    D --> E[Verify and review]
-    E --> F[Deliver]
+    A[Describe goal] --> B["1. Clarify<br/>grilling · requirements<br/>Plan mode · complex path<br/>explore · open questions"]
+    B --> C["2. Propose<br/>find-skills · candidates<br/>design · interfaces<br/>propose · tasks"]
+    C -->|User requests implementation| D["3. Implement<br/>apply-change · tasks<br/>Project skills · stack guidance<br/>design · interfaces"]
+    D --> E["4. Verify + close<br/>Checks · behavior<br/>code-review · standards/spec<br/>sync + archive · full changes"]
     A -->|Small fix| D
-    E -->|Fix findings| D
+    E -->|Fix and recheck| D
 ```
 
-Clarification combines grilling, optional exploration, and inspection of candidate skills. The full path pauses after the OpenSpec proposal for your implementation request. Implementation includes installing the selected project skills and applying the design; verification and review lead back to fixes when needed. Full changes finish with spec synchronization and archive within the authorized scope. A clear small fix skips the planning stages.
+Plan mode is an optional Codex aid for complex, risky, or underspecified work; it does not create a second source of truth. `openspec-explore` investigates repository facts or feasibility only when questions remain. The OpenSpec proposal carries confirmed decisions, selected skills, and tasks, then waits for your implementation request. Small fixes go straight to implementation and review. Full changes sync specs and archive after checks pass.
+
+| Stage | Skills and tools | Role |
+| --- | --- | --- |
+| Clarify | `grilling`; Codex Plan mode (optional); `openspec-explore` (optional) | Clarify scope and acceptance; reason through complex paths; investigate unresolved repository facts or feasibility. |
+| Propose | `find-skills`; `codebase-design`; `openspec-propose` | Assess candidate skills, shape module interfaces, and create the authoritative proposal and task plan. |
+| Implement | `openspec-apply-change`; selected project skills; `codebase-design` | Execute OpenSpec tasks with stack-specific guidance and the agreed interfaces. |
+| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change` | Verify behavior, review standards and spec, fix and recheck findings, then sync and archive full changes. |
 
 ## Quick start
 
@@ -155,7 +161,7 @@ Codex reads the relevant reference when entering that phase. The entrypoint does
 
 ## Boundaries worth knowing
 
-- Real **Plan mode** belongs to the host. The skill uses available controls and never pretends text can toggle it.
+- **Plan mode is host-controlled and optional.** The OpenSpec proposal remains the single durable plan.
 - **Explore is optional** when the requirements and implementation approach are already clear.
 - **Review coverage is explicit.** Uncommitted and untracked implementation needs supplemental review. Without Git or independent agents, the workflow reports the fallback it actually performed.
 - **A passed review is not a passed test.** Completion requires actual evidence appropriate to the change.

@@ -4,7 +4,9 @@
 
 Read repository guidance, relevant implementation and tests, existing specs, build configuration, and project constraints. Establish whether this is a new project or a change to existing behavior. Inspect facts the environment can answer; reserve user questions for goals, tradeoffs, and acceptance decisions.
 
-If the host provides Plan mode controls, use them when planning is requested. If unavailable, state that you are following a planning phase without asserting that the host mode changed. While planning, inspect and research; defer package installation and source changes to an authorized execution phase. OpenSpec planning artifacts are the intended planning output when the host allows writing them.
+Plan mode is an optional host mode, not a workflow prerequisite or a second plan document. Use it when the task is still underspecified, risky, or likely to touch several systems and an implementation path would help before the OpenSpec proposal. Skip it when the confirmed requirements and repository facts already give `openspec-propose` enough direction. Carry any useful Plan mode reasoning into the proposal; the approved OpenSpec artifacts and tasks remain the single durable implementation plan. If the host does not expose Plan mode controls, continue with ordinary planning and do not claim that the mode changed.
+
+Respect the host's rules for writing while in Plan mode. If they prevent creating OpenSpec artifacts, leave the mode through actual host controls before running `openspec-propose`, or explain that the user needs to switch modes. Defer package installation and source changes to an authorized execution phase.
 
 ## Clarify once
 
@@ -49,4 +51,4 @@ Keep synchronization/archive as closure follow-ups outside tracked implementatio
 
 Present the artifacts, outstanding decisions, planned checks, and the delivery scope. The default full delivery includes implementation, verification, review/fixes, spec synchronization, and archive after all completion conditions pass. The user can narrow that scope.
 
-Stop after presenting the proposal and wait for a new request to implement. Only then leave actual Plan mode through available host controls or explain that the user must switch it. Do not promise that a skill can toggle host modes itself.
+Stop after presenting the proposal and wait for a new request to implement. If Plan mode was used, leave it after presenting the proposal through available host controls; never claim that the skill itself toggled the host mode. If no controls are available, explain that the user may need to switch modes before the next phase.
