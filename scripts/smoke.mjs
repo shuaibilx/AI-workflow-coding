@@ -21,6 +21,14 @@ env[process.platform === 'win32' ? 'Path' : 'PATH'] = [prefix, join(prefix, 'bin
 const run = (file, args) => runCommand(process.execPath, [file, ...args], { env, cwd: project });
 
 try {
+  const pluginEntry = join(projectRoot, 'skills', 'ai-workflow', 'scripts', 'cli.mjs');
+  const pluginSetup = JSON.parse((await run(pluginEntry, ['setup', '--plugin', '--json'])).stdout);
+  assert.equal(pluginSetup.ok, true);
+  console.log(`Plugin setup installed: ${pluginSetup.changes.map(({ name }) => name).join(', ')}`);
+  await run(pluginEntry, ['doctor', '--plugin']);
+  await assert.rejects(access(join(home, '.agents', 'skills', 'ai-workflow')));
+  const pluginRepeat = JSON.parse((await run(pluginEntry, ['setup', '--plugin', '--json'])).stdout);
+  assert.deepEqual(pluginRepeat.changes, [], 'repeat plugin setup should reuse dependencies');
   const sourceEntry = join(projectRoot, 'bin', 'ai-workflow.mjs');
   const first = await run(sourceEntry, ['install']);
   console.log(first.stdout.trim());
@@ -37,7 +45,7 @@ try {
   await run(installedEntry, ['init', '--project', project]);
   await access(join(project, 'openspec', 'config.yaml'));
   await access(join(project, '.agents', 'skills', 'openspec-propose', 'SKILL.md'));
-  console.log('Smoke passed: real pinned downloads, standard skills lock, installed entrypoint, repeat install, and OpenSpec project init.');
+  console.log('Smoke passed: plugin setup without a global workflow copy, real pinned downloads, standard skills lock, standalone entrypoint, repeat install, and explicit OpenSpec project init.');
 } finally {
   // root is a unique directory created by this script, never a user-provided path.
   if (resolve(root).startsWith(resolve(tmpdir()) + (process.platform === 'win32' ? '\\' : '/'))) {

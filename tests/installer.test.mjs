@@ -28,7 +28,8 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
   let cliAvailable = existingCli;
   const run = async (tool, args, options = {}) => {
     calls.push({ tool, args, options });
-    if (tool === 'git') return { stdout: `${'b'.repeat(40)}\tHEAD\n`, code: 0 };
+    if (tool === 'git') return { stdout: args[0] === '--version' ? 'git version 2.50.0\n' : `${'b'.repeat(40)}\tHEAD\n`, code: 0 };
+    if (tool === 'npm' && args[0] === '--version') return { stdout: '10.9.0\n', code: 0 };
     if (tool === 'openspec' && args[0] === '--version') {
       if (!cliAvailable) throw new Error('openspec not found');
       return { stdout: '1.14.3\n', code: 0 };
@@ -109,6 +110,87 @@ test('repeated install preserves existing skills and avoids downloads', async (t
   const result = await f.invoke();
   assert.equal(result.items.find((item) => item.name === 'grilling').action, 'skip');
   assert.equal(f.calls.some((call) => call.args.includes('add')), false);
+});
+
+test('plugin setup supplies its bundled workflow without making a global copy', async (t) => {
+  const f = await fixture(t, { existingCli: false });
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
+  const before = await f.invoke({ command: 'doctor', plugin: true });
+  assert.equal(before.items.find((item) => item.name === 'ai-workflow').action, 'ok');
+  assert.equal(before.ok, false, 'missing external dependencies still fail doctor');
+  await assert.rejects(access(f.home), 'doctor must stay read-only');
+  await f.invoke({ plugin: true });
+  assert.equal((await f.invoke({ command: 'doctor', plugin: true })).ok, true);
+  await assert.rejects(access(join(f.home, '.agents', 'skills', 'ai-workflow')));
+  const state = JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8'));
+  assert.equal(state.main, undefined, 'the plugin manager owns the bundled workflow');
+  f.calls.length = 0;
+  await f.invoke({ plugin: true });
+  assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
+});
+
+test('plugin dependency updates preserve a customized standalone workflow and report it', async (t) => {
+  const f = await fixture(t);
+  await f.invoke();
+  const target = join(f.home, '.agents', 'skills', 'ai-workflow', 'SKILL.md');
+  await writeFile(target, 'my customized standalone workflow');
+  const previous = JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8')).main;
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
+  const logs = [];
+  await execute({ command: 'update', home: f.home, skillRoot: join(f.packageRoot, 'skills', 'ai-workflow'), plugin: true }, { run: f.run, log: (line) => logs.push(line) });
+  assert.equal(await readFile(target, 'utf8'), 'my customized standalone workflow');
+  assert.deepEqual(JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8')).main, previous);
+  assert.ok(logs.some((line) => line.includes('standalone') && line.includes('preserved')));
+});
+
+test('plugin mode refuses to substitute an unrelated or absent package for the workflow', async (t) => {
+  const f = await fixture(t);
+  await assert.rejects(f.invoke({ plugin: true }), /plugin/i);
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'unrelated' }));
+  await assert.rejects(f.invoke({ plugin: true }), /plugin/i);
+  await assert.rejects(access(f.home));
+});
+
+test('setup owns prerequisite checks, missing installs, and final dependency verification', async (t) => {
+  const f = await fixture(t, { existingCli: false });
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
+  const result = await f.invoke({ command: 'setup', plugin: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.prerequisites.map(({ name }) => name), ['node', 'npm', 'git']);
+  assert.deepEqual(result.changes.map(({ name }) => name), ['openspec', 'grilling']);
+  assert.equal(result.items.every(({ action }) => action === 'ok'), true);
+  await assert.rejects(access(join(f.home, '.agents', 'skills', 'ai-workflow')));
+  await assert.rejects(access(join(f.project, 'openspec')));
+  f.calls.length = 0;
+  const repeat = await f.invoke({ command: 'setup', plugin: true });
+  assert.deepEqual(repeat.changes, []);
+  assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
+});
+
+test('setup stops before mutation if a toolchain prerequisite is unavailable', async (t) => {
+  const f = await fixture(t);
+  await assert.rejects(execute({ command: 'setup', home: f.home, skillRoot: join(f.packageRoot, 'skills', 'ai-workflow') }, {
+    log: () => {},
+    run: async (tool, args, options) => {
+      if (tool === 'git' && args[0] === '--version') throw new Error('git is unavailable');
+      return f.run(tool, args, options);
+    },
+  }), /git is unavailable/);
+  await assert.rejects(access(f.home));
+  assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
+});
+
+test('a failed setup distinguishes verified completed installs from its proposed actions', async (t) => {
+  const f = await fixture(t, { existingCli: false, failDownload: true });
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
+  const logs = [];
+  await assert.rejects(execute({ command: 'setup', home: f.home, skillRoot: join(f.packageRoot, 'skills', 'ai-workflow'), plugin: true }, {
+    run: f.run, log: (line) => logs.push(line),
+  }), /network unavailable/);
+  assert.deepEqual(logs.filter((line) => line.startsWith('completed ')), ['completed install openspec: 1.14.3']);
+  const state = JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8'));
+  assert.equal(state.openspec.version, '1.14.3');
+  assert.equal(state.skills.grilling, undefined);
 });
 
 test('existing user skills in the legacy Codex location are preserved even by update', async (t) => {

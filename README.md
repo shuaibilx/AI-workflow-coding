@@ -1,6 +1,6 @@
 <div align="center">
 
-# AI Workflow
+# AI Workflow Plugin
 
 **Carry a clear requirement all the way to verified delivery in Codex.**
 
@@ -12,7 +12,7 @@
 
 </div>
 
-AI Workflow is a Codex skill that connects requirements discovery, technology choices, relevant skills, OpenSpec planning, implementation, and review. It carries decisions between those steps and scales the process to the task.
+AI Workflow Plugin brings a guided development workflow to Codex: clarify requirements, choose technology and relevant skills, plan with OpenSpec, implement, verify, and review. It packages the modular `ai-workflow` skill, a first-run setup skill, and a dependency CLI. It carries decisions between stages and scales the process to the task.
 
 ## Why this exists
 
@@ -69,7 +69,48 @@ Plan mode is an optional Codex aid for complex, risky, or underspecified work; i
 
 Requires **Codex, Node.js 22.20.0 or newer, npm, and Git**. The installer is designed for Windows, macOS, and Linux; CI exercises the supported systems. Use PowerShell 7 on Windows.
 
-### Install with the skills CLI
+### Install the Plugin from this repository
+
+Use a Codex version with `codex plugin` commands:
+
+```sh
+codex plugin marketplace add shuaibilx/AI-workflow-coding
+codex plugin add ai-workflow@ai-workflow-coding
+```
+
+Restart Codex or start a new chat to load the installed skills. The marketplace is supplied by this repository; this is not a claim of listing in the official Plugin Directory.
+
+### Run first-time setup
+
+Run the Plugin's **Setup** action when your client offers it. You can also select **AI Workflow Plugin Setup** in Codex's skill picker and send:
+
+```text
+$ai-workflow:ai-workflow-setup Prepare missing dependencies and verify the environment.
+```
+
+Plugin skills use the namespace above to distinguish them from standalone installations. The manifest declares an onboarding skill; clients that do not expose a Setup action can invoke that skill directly.
+
+```mermaid
+flowchart LR
+    A[Install Plugin] --> S["Setup skill<br/><b>ai-workflow-setup</b>"]
+    S --> C["CLI: setup --plugin<br/>Check tools and dependencies"]
+    C -->|Missing| I["Install missing items<br/><b>CLI: install</b>"]
+    C -->|Already present| V["Verify and report<br/><b>CLI: doctor</b>"]
+    I --> V
+    V --> W["Start a task<br/><b>ai-workflow</b>"]
+```
+
+One setup request authorizes the missing dependency installs and final check; there are no repeated approval prompts for those steps. Existing dependencies are preserved. The workflow itself stays inside the Plugin rather than being copied to a global skill directory. Setup reports duplicate standalone entries and leaves them intact. If Node/npm/Git are missing, setup stops with the prerequisite to fix. Installing the Plugin alone does not run global dependency installation.
+
+The setup skill calls one bundled command, `setup --plugin --json`. The CLI owns the check/install/recheck sequence and returns structured results; the skill explains them and handles an explicitly selected project. See [Skill + CLI architecture](docs/architecture.md) for the layout and the patterns adapted from OpenSpec.
+
+To initialize OpenSpec too, explicitly name the project in your setup request. Otherwise setup only prepares dependencies. Then select the Plugin's **AI Workflow** skill and start a task:
+
+```text
+$ai-workflow:ai-workflow Help me clarify and propose a CSV export feature in this project.
+```
+
+### Standalone skill installation (also supported)
 
 ```sh
 npx skills add https://github.com/shuaibilx/AI-workflow-coding --skill ai-workflow --global --agent codex
@@ -84,7 +125,7 @@ Then help me plan a CSV export feature. Ask about material requirements before p
 
 This explicit setup request lets Codex run the bundled installer. The standard `skills add` command installs the main skill and its files; it does not execute dependency-installation hooks.
 
-### Or install the workflow and its global dependencies in one command
+### Or install the standalone workflow and global dependencies in one command
 
 ```sh
 npx --yes --package=github:shuaibilx/AI-workflow-coding ai-workflow install
@@ -94,37 +135,41 @@ This uses the package directly from GitHub; no separately published npm package 
 
 ### Continue after reviewing a proposal
 
+These examples select the Plugin's workflow. With a standalone installation, use `$ai-workflow` instead.
+
 ```text
-$ai-workflow Apply the proposal. Include verification, code review, fixes,
+$ai-workflow:ai-workflow Apply the proposal. Include verification, code review, fixes,
 spec synchronization, and archive once all completion checks pass.
 ```
 
 For a small fix:
 
 ```text
-$ai-workflow Fix this label typo. Keep the scope local and verify the affected screen.
+$ai-workflow:ai-workflow Fix this label typo. Keep the scope local and verify the affected screen.
 ```
 
 For an interrupted task:
 
 ```text
-$ai-workflow Continue the existing CSV export change from its current state.
+$ai-workflow:ai-workflow Continue the existing CSV export change from its current state.
 ```
 
 ## What gets installed
 
-The installer adds AI Workflow, missing global workflow skills (`grilling`, `find-skills`, `codebase-design`, `code-review`, and `pr`), and the OpenSpec CLI. Task-specific skills and optional repository setup are handled separately:
+The Plugin carries the workflow and setup skills. Its setup installs missing global workflow dependencies (`grilling`, `find-skills`, `codebase-design`, `code-review`, and `pr`) and the OpenSpec CLI. Task-specific skills and optional repository setup are handled separately:
 
 | Item | Location / behavior |
 | --- | --- |
-| AI Workflow and standard skills | User `.agents/skills/`; existing legacy `.codex/skills/` dependencies are detected too |
+| Plugin workflow, setup, and CLI | Codex-managed Plugin installation; updated with the Plugin |
+| Standard third-party skills | User `.agents/skills/`; existing legacy `.codex/skills/` dependencies are detected too |
+| Standalone AI Workflow (alternative install) | User `.agents/skills/ai-workflow`; Plugin setup does not create or replace it |
 | OpenSpec CLI | npm global; an existing CLI is preserved |
 | OpenSpec project files | Initialized only in an explicitly selected project |
 | Task-specific skills (`tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`, `create-pull-request`, `babysit-pr`, or a better-fit candidate) | Project `.agents/skills/`, selected for the task and installed when authorized |
 | `setup-matt-pocock-skills` | Optional, user-invoked repository onboarding; not an OpenSpec prerequisite |
 | Installer ownership record | User `.ai-workflow/state.json`; separate from the skills CLI's own lock |
 
-Third-party skills are downloaded from their original repositories. Their sources and fixed Git commits are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json). We do not vendor their source into this skill.
+Third-party skills are downloaded from their original repositories. Their sources and fixed Git commits are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json). We do not vendor their source into this Plugin.
 
 On full workflows, `pr` drafts a PR body from the final diff and verified evidence. Commit, push, and PR creation are separate opt-in actions: `create-pull-request` is used only for the operation the user requested. `babysit-pr` is reserved for monitoring an existing PR when requested. Git initialization is handled by the workflow's setup guidance, not an extra dependency. The other listed skills are selected only when their task triggers fit; the optional setup skill keeps issue tracking for backlog/triage and does not replace OpenSpec's change plan.
 
@@ -132,7 +177,18 @@ Existing unmanaged skills are reused and preserved, including during dependency 
 
 ## Check, initialize, and update
 
-After a global installation, this path works in a POSIX shell or PowerShell:
+For a Plugin installation, select its setup skill for diagnostics or dependency repair. To update the Git marketplace and install its current Plugin release:
+
+```sh
+codex plugin marketplace upgrade ai-workflow-coding
+codex plugin add ai-workflow@ai-workflow-coding
+```
+
+Restart Codex or open a new chat afterward. A local-path marketplace reads your checkout instead: update that checkout and reinstall. Dependency updates are separate from Plugin updates; ask Codex to run the bundled CLI's `update --plugin --dry-run`, then `update --plugin` when you intend to upgrade managed dependencies. Plugin setup itself only installs missing items and does not upgrade existing ones.
+
+For manual Plugin diagnostics, resolve its installed directory and run `node "<plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin`. The `--plugin` flag requires a valid bundled package and prevents copying or updating a standalone workflow. Do not hardcode a versioned cache path in automation.
+
+For a **standalone global installation**, this path works in a POSIX shell or PowerShell:
 
 ```sh
 node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" doctor
@@ -142,7 +198,7 @@ node "$HOME/.agents/skills/ai-workflow/scripts/cli.mjs" init --project "/absolut
 
 On Windows, provide a Windows project path such as `C:/work/my-project`. Resolve the actual skill path when using a custom Codex installation or project-scoped skills.
 
-Update skills installed with the `skills` CLI by name. The following commands refresh the workflow and standard skills globally:
+Update standalone skills installed with the `skills` CLI by name. These commands do not update the Plugin's bundled skill. The following commands refresh the standalone workflow and standard skills globally:
 
 ```sh
 npx --yes --package=skills@1.7.4 skills update ai-workflow --global --yes
@@ -169,6 +225,8 @@ This command updates dependencies installed and tracked by this installer; pre-e
 After an OpenSpec CLI upgrade, project instruction refresh is a separate deliberate operation (`openspec update` in the selected project). The installer does not silently refresh every project.
 
 ## Small entry, focused references
+
+The Plugin entry points are `plugin.json` (portable manifest), `.codex-plugin/plugin.json` (Codex compatibility), and `.agents/plugins/marketplace.json` (repository marketplace). `skills/ai-workflow-setup/` is the onboarding skill; the main workflow keeps its existing modular layout:
 
 ```text
 skills/ai-workflow/

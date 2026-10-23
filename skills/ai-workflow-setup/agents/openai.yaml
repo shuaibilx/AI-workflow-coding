@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Workflow Plugin Setup"
+  short_description: "Install missing dependencies and check workflow readiness"
+  default_prompt: "Use $ai-workflow-setup to prepare missing AI Workflow Plugin dependencies and verify the environment."

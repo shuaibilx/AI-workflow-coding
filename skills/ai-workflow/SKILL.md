@@ -4,7 +4,7 @@ description: Coordinate a Codex AI development workflow from requirements and te
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # AI Workflow
@@ -15,7 +15,7 @@ Carry confirmed decisions from discovery into implementation and verified delive
 
 1. Read the project's `AGENTS.md`, relevant code, tests, existing plans, and current working-tree state. Preserve unrelated user work.
 2. Identify the intended outcome, acceptance criteria, authorization already given, and current phase. If resuming, read [resume.md](references/resume.md) before starting anything again.
-3. Check only the dependencies needed now. For missing dependencies, installation, or an uninitialized project, read [setup.md](references/setup.md). The installer is bundled at `scripts/cli.mjs`, relative to this skill directory.
+3. Check only the dependencies needed now. For missing dependencies, installation, or an uninitialized project, read [setup.md](references/setup.md). The installer is bundled at `scripts/cli.mjs`, relative to this skill directory. In a Plugin installation, its setup skill prepares dependencies and bundled CLI commands use `--plugin`.
 4. Select a route. Explain the choice in one sentence; ask only if material uncertainty prevents choosing it.
 
 | Route | Use when | Continue with |

@@ -69,6 +69,17 @@ function validateManifest(manifest) {
   }
 }
 
+async function verifyPlugin(skillRoot) {
+  const root = resolve(skillRoot, '../..');
+  const portable = join(root, 'plugin.json');
+  const path = await exists(portable) ? portable : join(root, '.codex-plugin', 'plugin.json');
+  if (!await exists(path) || (await readJson(path)).name !== 'ai-workflow'
+      || resolve(skillRoot) !== join(root, 'skills', 'ai-workflow')
+      || !await exists(join(skillRoot, 'SKILL.md'))) {
+    throw new Error('--plugin requires the bundled skills/ai-workflow directory in an AI Workflow Plugin package.');
+  }
+}
+
 async function initProject({ project, dryRun }, { run, log }) {
   if (!project) throw new Error('init requires --project <directory>; the current directory is never assumed.');
   const cwd = await realpath(resolve(project));
@@ -96,9 +107,25 @@ async function initProject({ project, dryRun }, { run, log }) {
 }
 
 export async function execute(options = {}, { run = runCommand, log = console.log } = {}) {
-  const { command = 'install', home = homedir(), skillRoot = bundledSkillRoot, dryRun = false, latest = false } = options;
-  if (!['install', 'update', 'doctor', 'init'].includes(command)) throw new Error(`Unknown command: ${command}`);
+  const { command = 'install', home = homedir(), skillRoot = bundledSkillRoot, dryRun = false, latest = false, plugin = false } = options;
+  if (!['setup', 'install', 'update', 'doctor', 'init'].includes(command)) throw new Error(`Unknown command: ${command}`);
   if (latest && command !== 'update') throw new Error('--latest is supported only by update');
+  if (command === 'setup' && dryRun) throw new Error('For a read-only installation preview use install --dry-run; setup performs installation and verification.');
+  if (plugin) await verifyPlugin(skillRoot);
+  if (command === 'setup') {
+    const prerequisites = [{ name: 'node', version: process.versions.node }];
+    for (const tool of ['npm', 'git']) {
+      const result = await run(tool, ['--version']);
+      prerequisites.push({ name: tool, version: result.stdout.trim() });
+    }
+    for (const { name, version } of prerequisites) log(`ok prerequisite ${name}: ${version}`);
+    const before = await execute({ ...options, command: 'doctor' }, { run, log });
+    const installation = before.ok ? null : await execute({ ...options, command: 'install' }, { run, log });
+    const after = await execute({ ...options, command: 'doctor' }, { run, log });
+    const changes = installation?.items.filter(({ action }) => action !== 'skip') || [];
+    log(after.ok ? 'Setup complete: required dependencies are available.' : 'Setup incomplete: required dependencies are still missing.');
+    return { ...after, prerequisites, changes };
+  }
   if (command === 'init') return initProject(options, { run, log });
   const manifest = await readJson(join(skillRoot, 'config', 'dependencies.json'));
   validateManifest(manifest);
@@ -108,18 +135,25 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
   const items = [];
   const add = (name, action, detail = '') => { const item = { name, action, detail }; items.push(item); log(`${action} ${name}${detail ? `: ${detail}` : ''}`); return item; };
   const source = skillRoot;
-  const sourceDigest = await digestTree(source);
-  const mainPath = await locateSkill(home, 'ai-workflow');
+  const sourceDigest = plugin ? null : await digestTree(source);
+  const mainPath = plugin ? null : await locateSkill(home, 'ai-workflow');
   const mainTarget = join(home, '.agents', 'skills', 'ai-workflow');
   const runningFromInstalledSkill = mainPath && await realpath(source) === await realpath(mainPath);
   const managedMain = Boolean(mainPath && state.main?.path === mainPath);
-  let mainAction = mainPath ? 'skip' : 'install';
+  let mainAction = plugin || mainPath ? 'skip' : 'install';
   if (mainPath && managedMain && !runningFromInstalledSkill && command !== 'doctor') {
     if ((await lstat(mainPath)).isSymbolicLink() || await digestTree(mainPath) !== state.main.digest) throw new Error(`Managed ai-workflow was locally modified: ${mainPath}`);
     if (sourceDigest !== state.main.digest) mainAction = 'update';
   }
-  const mainDetail = mainPath && !managedMain ? `${mainPath} (existing; unmanaged, preserved)` : mainPath || mainTarget;
-  add('ai-workflow', command === 'doctor' ? (mainPath ? 'ok' : 'missing') : mainAction, mainDetail);
+  const mainDetail = plugin ? `${source} (provided by plugin)`
+    : mainPath && !managedMain ? `${mainPath} (existing; unmanaged, preserved)` : mainPath || mainTarget;
+  add('ai-workflow', command === 'doctor' ? (plugin || mainPath ? 'ok' : 'missing') : mainAction, mainDetail);
+  if (plugin) {
+    for (const base of ['.agents', '.codex']) {
+      const path = join(home, base, 'skills', 'ai-workflow');
+      if (await exists(path)) log(`notice standalone ai-workflow preserved: ${path}. Select the plugin's workflow entry to use this version.`);
+    }
+  }
   let openspecVersion;
   try {
     const result = await run('openspec', ['--version']);
@@ -149,6 +183,7 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
     await installMain(source, mainTarget);
     state.main = { path: mainTarget, digest: sourceDigest, version: manifest.workflowVersion };
     await saveState(statePath, state);
+    log(`completed ${mainAction} ai-workflow: ${mainTarget}`);
   }
   if (openspecAction !== 'skip') {
     const version = latest ? (await run('npm', ['view', '@fission-ai/openspec', 'version'])).stdout.trim() : manifest.openspec.version;
@@ -160,6 +195,7 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
     if (verifiedVersion !== version) throw new Error(`OpenSpec ${version} was requested, but its executable is not active. Add npm's global executable directory to PATH and retry.`);
     state.openspec = { version, managed: true, channel: latest ? 'upstream' : 'pinned' };
     await saveState(statePath, state);
+    log(`completed ${openspecAction} openspec: ${version}`);
   }
   const revisions = new Map();
   for (const item of skillItems.filter((entry) => entry.action !== 'skip')) {
@@ -182,6 +218,7 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
     if (!path) throw new Error(`skills add did not install ${item.name}`);
     state.skills[item.name] = { repository: item.repository, ref, path, digest: await digestTree(path), managed: true, channel: latest ? 'upstream' : 'pinned' };
     await saveState(statePath, state);
+    log(`completed ${item.action} ${item.name}: ${path}`);
   }
   return { ok: true, items };
 }
