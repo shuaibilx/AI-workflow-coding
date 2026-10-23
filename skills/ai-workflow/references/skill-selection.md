@@ -1,6 +1,6 @@
 # Discover and select project skills
 
-Use the installed `find-skills` to search and inspect candidates while planning. Prefer a short relevant set. Existing skills that already cover the need are candidates too; do not reinstall merely because a new workflow started.
+The Plugin already bundles all fixed workflow skills: `grilling`, `find-skills`, `codebase-design`, `code-review`, `pr`, six OpenSpec skills, `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`, `setup-matt-pocock-skills`, `create-pull-request`, and `babysit-pr`. Resolve and read them from the Plugin when their trigger applies; do not install duplicate copies. Use `find-skills` only to discover stack-specific skills that are not in this fixed set. Prefer a short relevant set. Existing project skills that already cover the need are candidates too; do not reinstall merely because a new workflow started.
 
 ## Selection criteria
 
@@ -25,12 +25,12 @@ Use these triggers to decide which additional skills belong in a task's proposal
 | `research` | External, version-sensitive, or otherwise uncertain technical facts could change a decision | Follow the skill's background-research and primary-source citation requirements; save one findings note in the repo's existing notes location and link relevant conclusions from OpenSpec. |
 | `domain-modeling` | The change resolves domain language or establishes a durable domain/architecture decision | Update a glossary lazily and keep it free of implementation details; create ADRs only for hard-to-reverse, surprising decisions with real trade-offs. |
 | `writing-for-agents` | Editing this workflow, another skill, `AGENTS.md`/`CLAUDE.md`, or agent-facing documentation | Read `SKILL-MECHANICS.md` when authoring a skill; keep task instructions and conditional references progressively disclosed. |
-| `create-pull-request` | The user explicitly requests commit/push or opening a GitHub PR | Use only for the requested operation after verification/review where applicable, with `gh` installed and authenticated; adapt its instructions to the host and repository. Never force-push by default. |
-| `babysit-pr` | The user explicitly asks to monitor an already-open GitHub PR's CI and review feedback | This is post-creation monitoring. Monitoring is read-only unless the user also authorizes fixes, reruns, or pushes. Read its complete skill and bundled scripts before use. |
+| `create-pull-request` | Every completed full workflow with GitHub delivery prerequisites ready; also for standalone delivery requests | The full-workflow standing authorization covers task-only commit/push and PR creation after verification/review/archive. Adapt instructions to the repository and host. Never force-push. |
+| `babysit-pr` | Immediately after the workflow creates a PR; also when the user asks to monitor an existing PR | Monitor in the current Codex session through merge/close. Follow the authorized boundary: up to three likely-flaky retries, fix and push branch-caused problems, no replies to human comments, and auto-merge only by repository rules. |
 
-`pr` is the standard dependency for full workflows and drafts a PR body after checks, review, and OpenSpec closure. It never creates or publishes the PR. `setup-matt-pocock-skills` is an opt-in, user-invoked, once-per-repository onboarding path only when the user chooses the broader Matt Pocock engineering conventions. It is not required by OpenSpec: treat the tracker as backlog/triage, OpenSpec as the current change plan, and glossary/ADR files as durable domain knowledge. Respect the setup skill's own confirmation and file-selection rules.
+`pr` drafts the PR body after checks, review, and OpenSpec closure; `create-pull-request` performs the actual authorized full-workflow GitHub delivery. `setup-matt-pocock-skills` remains an opt-in, user-invoked, once-per-repository onboarding path only when the user chooses the broader Matt Pocock engineering conventions. It is not required by OpenSpec: treat the tracker as backlog/triage, OpenSpec as the current change plan, and glossary/ADR files as durable domain knowledge. Respect the setup skill's own confirmation and file-selection rules.
 
-`code-review` already covers a local branch/PR diff against Standards and Spec. It produces a review report; it does not submit an approval or inline review to GitHub. Do not add another generic reviewer unless the user specifically wants reviews posted to the remote. Repository initialization (`git init`) is a small setup operation handled by [delivery.md](delivery.md), not a reason to install a low-fit skill.
+`code-review` covers the local branch/PR diff against Standards and Spec before delivery. After PR creation, the workflow may publish its actionable review as a GitHub COMMENT only. Ask before submitting APPROVE or REQUEST_CHANGES. Repository initialization (`git init`) is handled by [delivery.md](delivery.md), not a reason to install a low-fit skill.
 
 Do not route to `prototype` in this workflow. Use `openspec-explore` for unresolved design questions.
 
@@ -38,7 +38,7 @@ Summarize the selected names, sources, version/ref when available, purpose, and 
 
 ## Install after selection
 
-Once the proposal is ready, install selected implementation skills during an authorized setup/implementation phase. The user explicitly requesting GitHub delivery or monitoring an existing PR also authorizes selecting the corresponding delivery skill for that requested operation; no OpenSpec proposal is needed for a standalone delivery/follow-up request. A new dependency that changes the confirmed stack or scope returns to the decision step first. Respect actual host Plan mode restrictions.
+Once the proposal is ready and implementation is authorized, install only selected stack-specific project skills. The fixed workflow set is already in the Plugin. Full-workflow GitHub delivery uses the bundled delivery skills under the standing authorization; no extra install or proposal is needed. For a standalone request to monitor an existing PR, use bundled `babysit-pr` directly. A new stack-specific dependency that changes the confirmed stack or scope returns to the decision step first. Respect actual host Plan mode restrictions.
 
 From the code project's root, use a source-specific command such as:
 

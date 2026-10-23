@@ -59,14 +59,42 @@ async function locateSkill(home, name) {
 function validateManifest(manifest) {
   const semver = /^\d+\.\d+\.\d+(?:-[\w.-]+)?$/;
   if (manifest.schemaVersion !== 1 || !semver.test(manifest.skillsCli?.version)
+      || !/^\d+\.\d+\.\d+$/.test(manifest.runtime?.minimumNodeVersion)
       || manifest.openspec?.package !== '@fission-ai/openspec' || !semver.test(manifest.openspec.version)
-      || !Array.isArray(manifest.skills)) throw new Error('Invalid dependency manifest');
+      || !Array.isArray(manifest.skills) || !Array.isArray(manifest.pluginSkills)) throw new Error('Invalid dependency manifest');
   const names = new Set(['ai-workflow']);
   for (const skill of manifest.skills) {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(skill.name) || names.has(skill.name)
         || !/^[\w.-]+\/[\w.-]+$/.test(skill.repository) || !/^[a-f0-9]{40}$/.test(skill.ref)) throw new Error('Invalid skill dependency');
     names.add(skill.name);
   }
+  const pluginNames = new Set(['ai-workflow', 'ai-workflow-setup']);
+  for (const skill of manifest.pluginSkills) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(skill.name) || pluginNames.has(skill.name)
+        || typeof skill.source !== 'string' || !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(skill.source)
+        || typeof skill.revision !== 'string' || skill.revision.trim().length < 7
+        || typeof skill.license !== 'string' || !skill.license.trim()) throw new Error('Invalid bundled Plugin skill dependency');
+    pluginNames.add(skill.name);
+  }
+}
+
+function checkRuntimePrerequisite(version, minimumVersion) {
+  const parse = (value) => {
+    const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value || '');
+    return match ? match.slice(1).map(Number) : null;
+  };
+  const actual = parse(version);
+  const minimum = parse(minimumVersion);
+  const available = Boolean(actual && minimum && (actual[0] > minimum[0]
+    || (actual[0] === minimum[0] && (actual[1] > minimum[1]
+      || (actual[1] === minimum[1] && actual[2] >= minimum[2])))));
+  return {
+    name: 'node',
+    available,
+    version,
+    minimumVersion,
+    ...(!available ? { detail: `Node.js >=${minimumVersion} is required (found ${version || 'unknown'})` } : {}),
+  };
 }
 
 function assertPluginSkillsComplete(items) {
@@ -80,9 +108,42 @@ async function verifyPlugin(skillRoot) {
   const path = await exists(portable) ? portable : join(root, '.codex-plugin', 'plugin.json');
   if (!await exists(path) || (await readJson(path)).name !== 'ai-workflow'
       || resolve(skillRoot) !== join(root, 'skills', 'ai-workflow')
-      || !await exists(join(skillRoot, 'SKILL.md'))) {
+      || !await exists(join(skillRoot, 'SKILL.md'))
+      || !await exists(join(root, 'skills', 'ai-workflow-setup', 'SKILL.md'))) {
     throw new Error('--plugin requires the bundled skills/ai-workflow directory in an AI Workflow Plugin package.');
   }
+}
+
+async function checkDeliveryPrerequisites(run, log) {
+  const checkVersion = async (tool, name) => {
+    try {
+      const result = await run(tool, ['--version'], { allowFailure: true });
+      const available = result.code === 0;
+      const version = result.stdout.trim().split(/\r?\n/)[0] || '';
+      log(`${available ? 'ok' : 'missing'} delivery prerequisite ${name}${version ? `: ${version}` : ''}`);
+      return { name, available, ...(version ? { version } : {}) };
+    } catch (error) {
+      log(`missing delivery prerequisite ${name}: ${error.message}`);
+      return { name, available: false, detail: error.message };
+    }
+  };
+  const git = await checkVersion('git', 'git');
+  const gh = await checkVersion('gh', 'gh');
+  let auth;
+  if (!gh.available) {
+    auth = { name: 'gh-auth', available: false, detail: 'GitHub CLI is unavailable' };
+  } else {
+    try {
+      const result = await run('gh', ['auth', 'status'], { allowFailure: true });
+      auth = { name: 'gh-auth', available: result.code === 0,
+        ...(result.code === 0 ? {} : { detail: result.stderr.trim() || 'gh auth status did not succeed' }) };
+    } catch (error) {
+      auth = { name: 'gh-auth', available: false, detail: error.message };
+    }
+  }
+  log(`${auth.available ? 'ok' : 'missing'} delivery prerequisite gh-auth${auth.detail ? `: ${auth.detail}` : ''}`);
+  const prerequisites = [git, gh, auth];
+  return { deliveryReady: prerequisites.every(({ available }) => available), deliveryPrerequisites: prerequisites };
 }
 
 async function initProject({ project, dryRun }, { run, log }) {
@@ -111,22 +172,32 @@ async function initProject({ project, dryRun }, { run, log }) {
   return { ok: true, items: [{ name: 'openspec-project', action: 'init' }] };
 }
 
-export async function execute(options = {}, { run = runCommand, log = console.log } = {}) {
+export async function execute(options = {}, { run = runCommand, log = console.log, nodeVersion = process.versions.node } = {}) {
   const { command = 'install', home = homedir(), skillRoot = bundledSkillRoot, dryRun = false, latest = false, plugin = false } = options;
   if (!['setup', 'install', 'update', 'doctor', 'init'].includes(command)) throw new Error(`Unknown command: ${command}`);
   if (latest && command !== 'update') throw new Error('--latest is supported only by update');
   if (command === 'setup' && dryRun) throw new Error('For a read-only installation preview use install --dry-run; setup performs installation and verification.');
   if (plugin) await verifyPlugin(skillRoot);
+  const manifest = await readJson(join(skillRoot, 'config', 'dependencies.json'));
+  validateManifest(manifest);
+  const runtimePrerequisite = checkRuntimePrerequisite(nodeVersion, manifest.runtime.minimumNodeVersion);
+  log(`${runtimePrerequisite.available ? 'ok' : 'missing'} prerequisite node: ${nodeVersion} (requires >=${runtimePrerequisite.minimumVersion})`);
+  if (!runtimePrerequisite.available && !['setup', 'doctor'].includes(command)) {
+    throw new Error(runtimePrerequisite.detail);
+  }
   if (command === 'setup') {
-    const prerequisites = [{ name: 'node', version: process.versions.node }];
-    log(`ok prerequisite node: ${process.versions.node}`);
-    const before = await execute({ ...options, command: 'doctor' }, { run, log });
+    const before = await execute({ ...options, command: 'doctor' }, { run, log, nodeVersion });
+    const prerequisites = [before.runtimePrerequisite, ...(before.deliveryPrerequisites || [])];
+    if (!runtimePrerequisite.available) {
+      log('Setup incomplete: install a supported Node.js version before preparing dependencies.');
+      return { ...before, prerequisites, changes: [] };
+    }
     let installation = null;
     if (!before.ok) {
       if (plugin) {
         assertPluginSkillsComplete(before.items);
         const result = await run('npm', ['--version']);
-        prerequisites.push({ name: 'npm', version: result.stdout.trim() });
+        prerequisites.push({ name: 'npm', available: true, version: result.stdout.trim() });
         log(`ok prerequisite npm: ${result.stdout.trim()}`);
       } else {
         for (const tool of ['npm', 'git']) {
@@ -143,8 +214,6 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
     return { ...after, prerequisites, changes };
   }
   if (command === 'init') return initProject(options, { run, log });
-  const manifest = await readJson(join(skillRoot, 'config', 'dependencies.json'));
-  validateManifest(manifest);
   const statePath = join(home, '.ai-workflow', 'state.json');
   const state = await exists(statePath) ? await readJson(statePath) : { schemaVersion: 1, skills: {} };
   if (state.schemaVersion !== 1 || !state.skills || typeof state.skills !== 'object') throw new Error(`Invalid installer state: ${statePath}`);
@@ -181,7 +250,8 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
 
   const skillItems = [];
   const pluginSkillsRoot = plugin ? join(resolve(skillRoot, '../..'), 'skills') : null;
-  for (const dependency of manifest.skills) {
+  const dependencies = plugin ? manifest.pluginSkills : manifest.skills;
+  for (const dependency of dependencies) {
     const path = plugin
       ? (await exists(join(pluginSkillsRoot, dependency.name, 'SKILL.md')) ? join(pluginSkillsRoot, dependency.name) : null)
       : await locateSkill(home, dependency.name);
@@ -196,7 +266,10 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
     const item = add(dependency.name, command === 'doctor' && !plugin ? (path ? 'ok' : 'missing') : action, detail);
     skillItems.push({ ...dependency, ...item, path, managed, bundled: plugin });
   }
-  if (command === 'doctor') return { ok: items.every((item) => item.action === 'ok'), items };
+  if (command === 'doctor') {
+    const delivery = await checkDeliveryPrerequisites(run, log);
+    return { ok: runtimePrerequisite.available && items.every((item) => item.action === 'ok'), items, runtimePrerequisite, ...delivery };
+  }
   if (plugin) {
     assertPluginSkillsComplete(skillItems);
   }

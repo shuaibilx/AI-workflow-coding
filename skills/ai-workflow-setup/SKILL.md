@@ -1,38 +1,45 @@
 ---
 name: ai-workflow-setup
-description: Check or prepare the AI Workflow Plugin environment when the user asks for diagnostics, dependency repair, or OpenSpec CLI setup. Bundled Plugin skills need no setup.
+description: Prepare and verify local OpenSpec and GitHub prerequisites for an AI Workflow full-development task, or diagnose the Plugin environment when requested.
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
-# Optional AI Workflow environment setup
+# AI Workflow setup
 
-The Plugin bundles its fixed dependency skills, so ordinary development does not require this skill. Use it only when the user asks to inspect or prepare the environment, or when an OpenSpec-backed workflow needs the missing CLI.
+Use this skill at the start of a full workflow or when the user asks to check/repair the Plugin environment. Small local fixes do not require setup.
 
-## Locate the bundled installer
+## Locate the packaged CLI
 
-Resolve this skill's installed directory from the host catalog. The CLI is at `../ai-workflow/scripts/cli.mjs` relative to this directory. The Plugin root contains `plugin.json` and/or `.codex-plugin/plugin.json`. Do not assume this Git checkout or a global `ai-workflow` command exists. Read the sibling workflow's [setup reference](../ai-workflow/references/setup.md) for install and project-initialization rules.
+Resolve this skill's absolute Plugin directory from the host catalog. The CLI is at `../ai-workflow/scripts/cli.mjs` relative to this skill. Never assume a repository checkout or a global `ai-workflow` executable.
 
-## Check or prepare
+## Run setup once per full workflow
 
-1. Check `node --version`; the bundled CLI requires Node.js >=22.20.0. Do not install or switch the user's runtime.
-2. For a read-only check, run `doctor --plugin --json`. This reports bundled skills and the OpenSpec CLI without installing anything.
-3. For an explicitly requested setup, run `setup --plugin --json`. It uses the packaged skills and installs only a missing OpenSpec CLI via npm. It does not run `skills add`, alter existing global skill copies, or initialize a project unless the user explicitly identifies one.
-4. Parse the JSON result and exit code. `items` show final dependency status, `prerequisites` show checked tools, `changes` show performed installs, and `messages` explain results. Claim readiness only when `ok` is true and the command exits 0. A missing bundled skill indicates an incomplete Plugin; tell the user to refresh or reinstall the Plugin rather than downloading a substitute.
-
-Use the CLI from its actual installed path:
+Run:
 
 ```sh
-node "<absolute-plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin --json
-node "<absolute-plugin-path>/skills/ai-workflow/scripts/cli.mjs" setup --plugin --json
+node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" setup --plugin --json
 ```
 
-Only initialize OpenSpec when the user explicitly requests setup for a clearly identified project:
+This checks that Node.js meets the packaged minimum (22.20.0), every fixed skill is present in the installed Plugin, and OpenSpec, Git, `gh`, and GitHub authentication are available; it installs only a missing pinned OpenSpec CLI globally via npm. An unsupported Node.js version stops setup before dependency installation. It does not install Git or `gh`, download skills, change global skill copies, or initialize any project. OpenSpec installation is automatic within this explicitly invoked setup flow; no extra confirmation is needed.
+
+Read the complete JSON result and exit code:
+
+- `ok: true` and exit code 0 means local OpenSpec workflow setup is ready.
+- `runtimePrerequisite.available: false` means Node.js is below the required version; upgrade Node.js before retrying setup.
+- `deliveryReady: true` means Git and authenticated `gh` are available for the later GitHub phase.
+- `deliveryReady: false` does not block local planning/implementation/review. Report the missing prerequisite and pause push/PR operations.
+- `changes` lists only verified dependency installations performed by this invocation.
+- A missing bundled skill means the Plugin installation is incomplete; ask the user to refresh/reinstall the Plugin instead of downloading a replacement.
+
+When GitHub auth is missing, the recovery command is `gh auth login`. If the CLI is unavailable, tell the user to install GitHub CLI. Do not ask users to manually run setup on every invocation; the main workflow invokes this skill automatically before full workflows.
+
+For read-only checks, use `doctor --plugin --json`. Do not initialize a project as part of general setup. Only when the user has selected and authorized a specific project, initialize it with:
 
 ```sh
-node "<absolute-plugin-path>/skills/ai-workflow/scripts/cli.mjs" init --project "<absolute-project-directory>"
+node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" init --project "<absolute-project-directory>"
 ```
 
-Report bundled skill availability, OpenSpec CLI status, any verified installation, and project initialization only when requested.
+OpenSpec's generated Codex skills remain under the project's default `.agents/skills/` directory. Preserve them even though the Plugin also bundles OpenSpec skills.

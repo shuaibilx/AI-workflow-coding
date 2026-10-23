@@ -9,9 +9,9 @@ For a small fix, the user's fix request normally authorizes the scoped edit. Sta
 ## Prepare the implementation surface
 
 1. Read `codebase-design`, repository standards, and the selected technology skills. Apply the design principles to the relevant interfaces, alongside the project's own conventions.
-2. Check the actual Git state. When Git exists, record the starting commit SHA, branch, and pre-existing staged/unstaged/untracked work. Do not reset, commit, or include unrelated edits just to simplify review.
-3. If no Git baseline exists, note that limitation and keep a bounded list of relevant files and initial observations. Do not initialize Git without a request merely to satisfy a review dependency.
-4. Install the project skills selected in the plan, when authorized; use [skill-selection.md](skill-selection.md).
+2. Check the actual Git state. For a full workflow, a task branch must already be prepared per [delivery.md](delivery.md); record the starting commit SHA, branch, and pre-existing staged/unstaged/untracked work. Do not reset or absorb unrelated edits.
+3. If Git is unavailable, note that limitation and keep a bounded list of relevant files and initial observations. Do not install Git; local work may continue, but GitHub delivery is blocked.
+4. Install only selected stack-specific project skills after the proposal is ready and implementation is authorized; fixed workflow skills already ship in this Plugin. See [skill-selection.md](skill-selection.md).
 
 Follow the selected skills at their relevant seams. With `tdd`, use only the user-confirmed public test seams and work in red/green vertical slices. With `diagnosing-bugs`, do not jump to a cause before its symptom-specific loop is red-capable; preserve redaction and cleanup requirements. When `domain-modeling` is selected, update resolved glossary terms inline and keep implementation decisions in OpenSpec unless they meet the ADR criteria. When editing agent instructions or skills, use `writing-for-agents`; do not load it for ordinary product-code changes.
 

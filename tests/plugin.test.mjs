@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,19 +21,54 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   const entry = marketplace.plugins.find(({ name }) => name === portable.name);
   assert.ok(entry, 'the plugin must be addressable from its marketplace');
   assert.equal(fileURLToPath(new URL(entry.source.path, new URL('../', import.meta.url))), repo);
-  assert.equal(portable.extensions['com.openai'].onboardingSkill, undefined, 'setup is not a mandatory onboarding action');
-  assert.equal(compatibility.extensions?.['com.openai']?.onboardingSkill, undefined);
+  assert.equal(portable.extensions['com.openai'].onboardingSkill, 'ai-workflow-setup');
+  assert.equal(compatibility.extensions['com.openai'].onboardingSkill, 'ai-workflow-setup');
   const packed = JSON.parse((await runCommand('npm', ['pack', '--dry-run', '--json'], { cwd: repo })).stdout)[0];
   const paths = new Set(packed.files.map(({ path }) => path));
   for (const path of ['plugin.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json',
     'THIRD_PARTY_NOTICES.md', 'licenses/MIT-mattpocock-skills.txt', 'licenses/MIT-vercel-labs-skills.txt',
-    'licenses/Apache-2.0-humanlayer.txt', 'skills/ai-workflow-setup/agents/openai.yaml',
+    'licenses/Apache-2.0-humanlayer.txt', 'licenses/Apache-2.0-cline.txt', 'licenses/Apache-2.0-openai-codex.txt',
+    'licenses/MIT-fission-ai-openspec.txt', 'skills/ai-workflow-setup/agents/openai.yaml',
     'skills/ai-workflow/SKILL.md', 'skills/ai-workflow/scripts/cli.mjs',
     'skills/ai-workflow/config/dependencies.json', 'skills/ai-workflow/scripts/lib/installer.mjs']) {
     assert.ok(paths.has(path), `missing plugin resource in npm artifact: ${path}`);
   }
-  for (const { name } of JSON.parse(await readFile(join(repo, 'skills/ai-workflow/config/dependencies.json'), 'utf8')).skills) {
-    assert.ok(paths.has(`skills/${name}/SKILL.md`), `the plugin artifact must carry ${name}`);
+  const manifest = JSON.parse(await readFile(join(repo, 'skills/ai-workflow/config/dependencies.json'), 'utf8'));
+  const bundledNames = manifest.pluginSkills.map(({ name }) => name);
+  assert.deepEqual(bundledNames, [
+    'grilling', 'find-skills', 'codebase-design', 'code-review', 'pr',
+    'openspec-explore', 'openspec-propose', 'openspec-apply-change', 'openspec-archive-change', 'openspec-sync-specs', 'openspec-update-change',
+    'tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents', 'setup-matt-pocock-skills',
+    'create-pull-request', 'babysit-pr',
+  ]);
+  for (const { name } of manifest.pluginSkills) {
+    const bundledPath = `skills/${name}/SKILL.md`;
+    assert.ok(paths.has(bundledPath), `the plugin artifact must carry ${name}`);
+    const skill = await readFile(join(repo, bundledPath), 'utf8');
+    assert.match(skill, new RegExp(`^---\\nname: ${name}\\n`), `${name} must have matching skill metadata`);
+    assert.ok(manifest.pluginSkills.find((entry) => entry.name === name).source.startsWith('https://github.com/'));
+    assert.ok(manifest.pluginSkills.find((entry) => entry.name === name).revision);
+    assert.ok(manifest.pluginSkills.find((entry) => entry.name === name).license);
+
+    async function list(directory) {
+      const entries = await readdir(directory, { withFileTypes: true });
+      return (await Promise.all(entries.map(async (entry) => {
+        const path = join(directory, entry.name);
+        return entry.isDirectory() ? list(path) : [path];
+      }))).flat();
+    }
+    for (const markdownPath of (await list(join(repo, 'skills', name))).filter((path) => path.endsWith('.md'))) {
+      const content = await readFile(markdownPath, 'utf8');
+      for (const [, rawTarget] of content.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+        const target = rawTarget.trim().replace(/^<|>$/g, '').split('#')[0].split('?')[0];
+        if (!target || /^(?:https?:|mailto:|[a-z]+:\/\/)/i.test(target) || target.startsWith('/')) continue;
+        if (/^(?:\.\/)?src\//.test(target)) continue; // Example project paths are not skill support files.
+        let decoded;
+        try { decoded = decodeURIComponent(target); } catch { decoded = target; }
+        assert.ok(await access(join(markdownPath, '..', decoded)).then(() => true, () => false),
+          `broken local skill link in ${markdownPath}: ${rawTarget}`);
+      }
+    }
   }
 });
 
@@ -73,7 +108,7 @@ test('the bundled CLI checks and reuses plugin dependencies without creating sta
   const setup = JSON.parse((await run(['setup', '--plugin', '--json'])).stdout);
   assert.equal(setup.ok, true);
   assert.deepEqual(setup.changes, []);
-  assert.deepEqual(setup.prerequisites.map(({ name }) => name), ['node']);
+  assert.deepEqual(setup.prerequisites.map(({ name }) => name), ['node', 'git', 'gh', 'gh-auth']);
   assert.equal(setup.items.every(({ action }) => action === 'ok'), true);
   assert.equal(setup.items.find(({ name }) => name === 'grilling').detail.includes('bundled by plugin'), true);
   const invalid = await runCommand(process.execPath, [cli, 'setup', '--plugin', '--dry-run', '--json'], { env, cwd: root, allowFailure: true });
@@ -83,7 +118,7 @@ test('the bundled CLI checks and reuses plugin dependencies without creating sta
   await run(['install', '--plugin']);
   await run(['install', '--plugin']);
   await assert.rejects(access(join(home, '.agents', 'skills', 'ai-workflow')));
-  for (const { name } of manifest.skills) {
+  for (const { name } of manifest.pluginSkills) {
     const bundled = await readFile(join(repo, 'skills', name, 'SKILL.md'), 'utf8');
     assert.match(bundled, /^---/);
     assert.equal((await run(['doctor', '--plugin'])).code, 0);

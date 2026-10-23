@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A Codex development workflow with bundled skills, OpenSpec planning, implementation, and review.",
   "author": { "name": "shuaibilx" },
   "skills": "./skills/",
@@ -8,5 +8,8 @@
     "displayName": "AI Workflow Plugin",
     "shortDescription": "Clarify, plan, implement, and review with Codex.",
     "developerName": "shuaibilx"
+  },
+  "extensions": {
+    "com.openai": { "onboardingSkill": "ai-workflow-setup" }
   }
 }

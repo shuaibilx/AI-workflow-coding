@@ -25,11 +25,12 @@ try {
   const manifest = JSON.parse(await readFile(join(projectRoot, 'skills', 'ai-workflow', 'config', 'dependencies.json'), 'utf8'));
   const pluginSetup = JSON.parse((await run(pluginEntry, ['setup', '--plugin', '--json'])).stdout);
   assert.equal(pluginSetup.ok, true);
-  for (const { name } of manifest.skills) {
+  for (const { name } of manifest.pluginSkills) {
     await access(join(projectRoot, 'skills', name, 'SKILL.md'));
     await assert.rejects(access(join(home, '.agents', 'skills', name)));
   }
-  console.log(`Plugin setup installed: ${pluginSetup.changes.map(({ name }) => name).join(', ')}`);
+  await access(join(projectRoot, 'skills', 'ai-workflow-setup', 'SKILL.md'));
+  console.log(`Plugin setup installed locally: ${pluginSetup.changes.map(({ name }) => name).join(', ')}; GitHub ready: ${pluginSetup.deliveryReady}`);
   await run(pluginEntry, ['doctor', '--plugin']);
   await assert.rejects(access(join(home, '.agents', 'skills', 'ai-workflow')));
   const pluginRepeat = JSON.parse((await run(pluginEntry, ['setup', '--plugin', '--json'])).stdout);
@@ -49,7 +50,7 @@ try {
   await run(installedEntry, ['init', '--project', project]);
   await access(join(project, 'openspec', 'config.yaml'));
   await access(join(project, '.agents', 'skills', 'openspec-propose', 'SKILL.md'));
-  console.log('Smoke passed: plugin setup without a global workflow copy, real pinned downloads, standard skills lock, standalone entrypoint, repeat install, and explicit OpenSpec project init.');
+  console.log('Smoke passed: complete bundled Plugin skills without global copies, local/global readiness separation, real pinned standalone downloads, standard skills lock, repeat install, and OpenSpec default project skill generation.');
 } finally {
   // root is a unique directory created by this script, never a user-provided path.
   if (resolve(root).startsWith(resolve(tmpdir()) + (process.platform === 'win32' ? '\\' : '/'))) {
