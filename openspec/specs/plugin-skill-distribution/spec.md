@@ -7,11 +7,11 @@ Make AI Workflow's fixed skill dependencies available as part of the installed P
 ## Requirements
 
 ### Requirement: Plugin bundles fixed workflow skills
-The Plugin SHALL include the fixed dependencies grilling, find-skills, codebase-design, code-review, and pr under its discoverable `skills/` directory, together with their required supporting files and redistribution notices.
+The Plugin SHALL include every fixed skill used by its workflow, including planning, OpenSpec, conditional engineering, and GitHub delivery skills, with required supporting files and upstream license notices.
 
 #### Scenario: Install Plugin with bundled dependencies
 - **WHEN** a user installs the AI Workflow Plugin
-- **THEN** Codex can discover the main workflow and all five fixed dependency skills from the Plugin package
+- **THEN** Codex can discover the main workflow and all fixed workflow skills from the Plugin package
 
 #### Scenario: Invoke a bundled dependency explicitly
 - **WHEN** a user selects a bundled dependency by its Plugin-namespaced skill name
@@ -28,16 +28,13 @@ Plugin-mode setup, installation, diagnostics, and updates SHALL use the packaged
 - **WHEN** a Plugin package lacks one of its declared bundled skills
 - **THEN** Plugin-mode setup reports an incomplete package and does not substitute a downloaded global skill
 
-### Requirement: Plugin installation has no required setup onboarding
-The Plugin SHALL make the main workflow and fixed skill dependencies available without requiring users to invoke a setup skill after installation.
-
-#### Scenario: Start a workflow immediately after installation
-- **WHEN** a user invokes the main workflow after installing the Plugin
-- **THEN** all fixed dependency skills are available without running a dependency installer
-
 ### Requirement: OpenSpec CLI remains an executable prerequisite
-The Plugin SHALL distinguish the OpenSpec CLI executable from bundled agent skills and SHALL report when the executable is unavailable for a requested OpenSpec workflow.
+The Plugin SHALL provide the pinned OpenSpec CLI globally before a full OpenSpec-backed workflow proceeds, while project initialization SHALL use OpenSpec's default Codex tool integration and project-local skill paths.
 
 #### Scenario: OpenSpec CLI is missing
-- **WHEN** a user requests an OpenSpec-backed workflow and the `openspec` executable is unavailable
-- **THEN** the workflow reports the missing executable and provides the optional CLI setup path
+- **WHEN** a full workflow begins and the `openspec` executable is unavailable
+- **THEN** setup installs the pinned CLI globally, verifies its active version, and proceeds only after verification succeeds
+
+#### Scenario: Initialize OpenSpec in a project
+- **WHEN** the user selects a project for OpenSpec initialization
+- **THEN** the installer runs `openspec init --tools codex` and preserves the generated project-local `.agents/skills/openspec-*` files

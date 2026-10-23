@@ -20,7 +20,7 @@
 
 - [x] 4.1 Rewrite both READMEs with matching horizontal Mermaid workflows, setup/update guidance, bundled skill inventory, and GitHub behavior; verify diagrams render structurally and bilingual claims agree.
 - [x] 4.2 Run `npm test`, `npm run check`, OpenSpec validation, and npm pack inspection; resolve failures and verify the complete package contents.
-- [ ] 4.3 Re-run `npm run test:integration` when GitHub DNS/network access is available; the current attempt fails while cloning `mattpocock/skills` because `github.com` cannot be resolved.
+- [x] 4.3 Re-run `npm run test:integration` after GitHub DNS/network access is available; the real pinned dependency install, repeat install, and OpenSpec project initialization smoke checks passed.
 
 ## Workflow follow-up
 
