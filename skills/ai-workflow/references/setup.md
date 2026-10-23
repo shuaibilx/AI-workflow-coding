@@ -1,86 +1,45 @@
-# Dependencies and project setup
+# Plugin setup and project initialization
 
-Read for installation, maintenance, missing dependencies, or project initialization. Paths below are relative to the installed skill, not the user's project. Locate that skill through the host's catalog; do not assume this repository is available.
+Read this reference before full OpenSpec workflows, environment repair, or explicit project initialization. Paths are relative to the installed skill, not the user's project.
 
-## Plugin setup
+## Full-workflow preflight
 
-When the host provides this workflow from the AI Workflow Plugin, use its `ai-workflow:ai-workflow-setup` onboarding skill for an explicit setup request. It calls `setup --plugin --json`: the CLI checks Node/npm/Git, installs missing dependencies, and reruns diagnostics within that one setup authorization. A check-only request stays read-only. A normal development request is not an instruction to install global software.
+All fixed workflow skills, including conditional engineering and GitHub skills, ship inside the Plugin. Codex discovers them without downloading global copies. Stack-specific skills remain project-specific and are selected separately.
 
-The Plugin's CLI is bundled at `scripts/cli.mjs` relative to this workflow directory. Pass `--plugin` to its `setup`, `doctor`, `install`, and `update` commands. This validates the enclosing package and treats the bundled main skill as supplied by the plugin manager; it never copies, adopts, or updates a standalone global workflow. Existing standalone entries are reported and preserved. Select the namespaced Plugin entry to avoid confusing versions.
-
-```sh
-node "<absolute-plugin-workflow-directory>/scripts/cli.mjs" setup --plugin --json
-node "<absolute-plugin-workflow-directory>/scripts/cli.mjs" doctor --plugin --json
-node "<absolute-plugin-workflow-directory>/scripts/cli.mjs" install --plugin --dry-run
-```
-
-Installing the Plugin does not automatically run npm or install global dependencies. Its manifest declares `./skills/ai-workflow-setup/SKILL.md` as the onboarding skill; the same skill can be invoked directly if the client does not expose a setup action. The Plugin owns the workflow and setup files; use marketplace refresh/reinstallation for those files, not a global skills update.
-
-## Standalone installation paths
-
-The public skill can be installed with:
+Before a full workflow, resolve and read `ai-workflow-setup`, then run the sibling CLI:
 
 ```sh
-npx skills add https://github.com/shuaibilx/AI-workflow-coding --skill ai-workflow --global --agent codex
+node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" setup --plugin --json
 ```
 
-That command installs this directory, including its scripts and references. It does not run dependency installation hooks. To install the workflow and missing global dependencies together from this repository, the user may instead run:
+The command checks that Node.js meets the packaged minimum of 22.20.0, the packaged skills are complete, and OpenSpec CLI, Git, GitHub CLI (`gh`), and `gh auth status` are available. An unsupported Node.js version stops setup before dependency installation. If OpenSpec is missing, setup installs only the pinned `@fission-ai/openspec` version globally through npm, then checks the active executable again. It does not install `gh`, alter global skills, or initialize a project. A package-completeness, Node.js, or OpenSpec failure blocks the OpenSpec workflow; missing Git/GitHub readiness pauses remote delivery but does not prevent local planning, implementation, and review.
+
+`setup` is idempotent and may be run at the start of each full workflow. When `ok` is true, local OpenSpec work is ready. `deliveryReady` and `deliveryPrerequisites` independently report whether GitHub operations are ready. If `gh-auth` is unavailable, report `gh auth login` as the recovery action and complete only local work until authentication is restored. If `gh` is missing, explain that it must be installed by the user. The setup CLI never installs Git or `gh`.
+
+For a read-only diagnostic, use:
 
 ```sh
-npx --yes --package=github:shuaibilx/AI-workflow-coding ai-workflow install
+node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin --json
 ```
 
-When this skill is already installed, resolve its absolute directory and use:
+Parse JSON and the process exit code. `runtimePrerequisite` reports the Node.js version check, `items` represent local workflow dependencies, and `deliveryReady` is separate. Claim setup success only when `ok` is true and the command exits 0. `changes` record actual installs only. A missing bundled skill means the Plugin package is incomplete; refresh or reinstall it rather than downloading an alternate copy.
+
+## Initialize an explicitly selected project
+
+Only initialize the project the user selected. An uninitialized project is not a reason to assume the current directory or initialize it automatically. Use the bundled CLI:
 
 ```sh
-node "<absolute-skill-directory>/scripts/cli.mjs" doctor
-node "<absolute-skill-directory>/scripts/cli.mjs" install --dry-run
-node "<absolute-skill-directory>/scripts/cli.mjs" install
+node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" init --project "<absolute-project-directory>"
 ```
 
-`doctor` is read-only. `install` changes global skills and may install the OpenSpec CLI through npm; run it when dependency setup is authorized. Present a concrete install command if setup has not been requested. Do not block a small fix because an unused full-workflow dependency is missing.
+This delegates to `openspec init --tools codex`. Preserve OpenSpec's default generated `.agents/skills/openspec-*` files inside the project, including when the Plugin carries its own copies. Existing project instructions and local OpenSpec skills are not deleted or redirected.
 
-## Scope and preservation
+If a project already resolves to an OpenSpec root, reuse it. Invalid store pointers or unresolved existing `openspec/` data are errors to diagnose, not invitations to reinitialize. After an OpenSpec CLI upgrade, inspect and deliberately run the project's `openspec update` if generated instructions need refreshing.
 
-| Dependency | Scope | Maintenance |
-| --- | --- | --- |
-| Plugin workflow, setup, and CLI | Codex-managed Plugin directory | Refresh/reinstall the Plugin; use bundled CLI commands with `--plugin` |
-| Standalone workflow (alternative) | User `.agents/skills/ai-workflow` | Update the public skill from its source, then run dependency update without `--plugin` |
-| grilling, find-skills, codebase-design, code-review, pr | Global | Install missing dependencies from declared Git commits |
-| OpenSpec CLI | npm global | Preserve an existing usable CLI; install the declared version if absent |
-| OpenSpec skills and config | Selected project | Generated by OpenSpec init/update |
-| Task-specific skills such as `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, and `writing-for-agents` | Project `.agents/skills` | Selected during planning and installed when authorized |
-| `create-pull-request`, `babysit-pr` | Project `.agents/skills` | Optional GitHub delivery/follow-up skills; install only when the user requests that phase |
+## Standalone skill installation
 
-Existing skills in both user `.agents/skills` and legacy `.codex/skills` locations are preserved. Their presence does not prove a known source or version; report them as existing/unmanaged. If an unmanaged `ai-workflow` already exists, skip replacing it and continue installing any missing declared dependencies. The installer only updates dependencies it previously installed, and refuses to overwrite edits it can detect. Do not automatically adopt, delete, or replace unmanaged content.
+The standalone distribution remains available for users who do not install the Plugin. `skills add` does not execute dependency installation hooks. Use the standalone CLI without `--plugin` only for that installation path. Its `install` command installs the five declared global baseline skills and a missing OpenSpec CLI; all workflow skills are already included in the Plugin distribution.
 
-`setup-matt-pocock-skills` is an optional, user-invoked repository onboarding path, not a prerequisite for OpenSpec. Offer it only when the user opts into the broader Matt Pocock engineering conventions. Keep its issue tracker for backlog/triage, OpenSpec as the current change plan, and glossary/ADR documents for durable domain knowledge; follow its own confirmation rules before writing project setup files.
+## Preserve other installations
 
-The installer records its own ownership and content digests in `~/.ai-workflow/state.json`; the skills CLI separately maintains its own lock. A failed download is not recorded as success. A rerun resumes by checking files and completed operations. Never edit those records merely to make a check pass.
-
-## OpenSpec initialization
-
-Only initialize the explicitly selected project, after the user has requested project setup:
-
-```sh
-node "<absolute-skill-directory>/scripts/cli.mjs" init --project "<absolute-project-directory>" --dry-run
-node "<absolute-skill-directory>/scripts/cli.mjs" init --project "<absolute-project-directory>"
-```
-
-This invokes `openspec init --tools codex` only when no root is resolved. Existing roots, including a parent or store-backed planning root, are reused. Invalid store pointers or existing unresolved OpenSpec directories are errors to fix, not invitations to reinitialize. Inspect legacy OpenSpec files before initialization; follow the CLI's migration guidance.
-
-An existing root may have a different workflow profile. Locate the required generated skills before continuing. If they are missing, inspect `openspec config profile --help` and `openspec update --help`, then explain the specific refresh needed. Do not overwrite an established project configuration with defaults.
-
-## Updates
-
-The following commands target a standalone installation. When running the Plugin's bundled CLI, append `--plugin` so only managed external dependencies are updated. First-time Plugin setup installs missing items; it does not update already installed dependencies.
-
-```sh
-node "<absolute-skill-directory>/scripts/cli.mjs" update --dry-run
-node "<absolute-skill-directory>/scripts/cli.mjs" update
-node "<absolute-skill-directory>/scripts/cli.mjs" update --latest
-```
-
-Default update uses the versions/commits in `config/dependencies.json`, refreshed with releases of this skill. `--latest` explicitly resolves upstream HEADs and registry versions and records them as an unverified channel. It is never the default and is not a claim of compatibility. Do not update dependencies on every development task.
-
-Updating the CLI and regenerating a project's OpenSpec skills are separate operations. After a CLI upgrade, inspect and deliberately run the project's refresh; the global installer does not update every project on the machine.
+Plugin setup never copies, deletes, or updates user-global skills or project-generated OpenSpec skills. Plugin-bundled updates arrive with a Plugin release. Existing `.agents/skills/openspec-*` generated by OpenSpec remain in their default project location and may take precedence in an initialized project; use the project's generated skill matching its active CLI/configuration.

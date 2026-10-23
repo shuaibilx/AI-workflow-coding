@@ -4,6 +4,8 @@
 
 Read repository guidance, relevant implementation and tests, existing specs, build configuration, and project constraints. Establish whether this is a new project or a change to existing behavior. Inspect facts the environment can answer; reserve user questions for goals, tradeoffs, and acceptance decisions.
 
+Before entering the full route, use `ai-workflow-setup` to run the Plugin setup preflight described in [setup.md](setup.md). When Git is available, create or reuse the task branch before any tracked project setup or change artifacts, following [delivery.md](delivery.md). Then treat the user's current project request as selecting that project: resolve its OpenSpec root and, if none exists, initialize it with the bundled CLI's `init --project <absolute-project-directory>`. This delegates to `openspec init --tools codex` and preserves generated `.agents/skills/openspec-*` files. Missing GitHub CLI/authentication pauses only the eventual remote-delivery phase; do not install those tools automatically.
+
 Plan mode is an optional host mode, not a workflow prerequisite or a second plan document. Use it when the task is still underspecified, risky, or likely to touch several systems and an implementation path would help before the OpenSpec proposal. Skip it when the confirmed requirements and repository facts already give `openspec-propose` enough direction. Carry any useful Plan mode reasoning into the proposal; the approved OpenSpec artifacts and tasks remain the single durable implementation plan. If the host does not expose Plan mode controls, continue with ordinary planning and do not claim that the mode changed.
 
 Respect the host's rules for writing while in Plan mode. If they prevent creating OpenSpec artifacts, leave the mode through actual host controls before running `openspec-propose`, or explain that the user needs to switch modes. Defer package installation and source changes to an authorized execution phase.
@@ -30,7 +32,7 @@ When both requirements and the implementation approach are sufficiently clear, s
 
 Read `codebase-design` before choosing module interfaces and seams. Respect existing architecture and repo standards; this skill's design vocabulary does not replace them. Avoid adding abstractions only to satisfy a design slogan.
 
-Read [skill-selection.md](skill-selection.md). Search and inspect relevant skill candidates now, before finalizing the design. Their recommendations can change the technology choice or implementation approach. Keep installation until the proposal is ready and setup/implementation is authorized.
+Read [skill-selection.md](skill-selection.md). The Plugin already bundles fixed workflow candidates; read relevant ones now, before finalizing the design. Use `find-skills` to discover stack-specific candidates only when the selected project stack warrants them. Their recommendations can change the technology choice or implementation approach. Keep installation of any newly selected project-specific skill until the proposal is ready and implementation is authorized.
 
 Apply the task-specific planning triggers from `skill-selection.md` before proposing:
 
@@ -55,6 +57,6 @@ Use the actual schema rather than forcing these names on every project. Record t
 
 Keep synchronization/archive as closure follow-ups outside tracked implementation tasks, unless the schema explicitly separates their lifecycle. A tracked task to archive the change would otherwise prevent the pre-archive task-completion check from ever passing.
 
-Present the artifacts, outstanding decisions, planned checks, and the delivery scope. The default full delivery includes implementation, verification, review/fixes, spec synchronization, and archive after all completion conditions pass. The user can narrow that scope.
+Present the artifacts, outstanding decisions, planned checks, and delivery scope. The default full workflow includes implementation, verification, review/fixes, spec synchronization, archive, task-only commit/push, PR creation, a COMMENT-only AI review, current-session PR monitoring, and repository-rule-compliant auto-merge when eligible. If GitHub prerequisites are unavailable, clearly state that only the local portion can proceed until they are restored.
 
 Stop after presenting the proposal and wait for a new request to implement. If Plan mode was used, leave it after presenting the proposal through available host controls; never claim that the skill itself toggled the host mode. If no controls are available, explain that the user may need to switch modes before the next phase.

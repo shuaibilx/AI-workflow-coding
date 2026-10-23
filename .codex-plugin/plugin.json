@@ -1,7 +1,7 @@
 {
   "name": "ai-workflow",
-  "version": "0.2.0",
-  "description": "A Codex development workflow with guided dependency setup, OpenSpec planning, implementation, and review.",
+  "version": "0.4.0",
+  "description": "A Codex development workflow with bundled skills, OpenSpec planning, implementation, and review.",
   "author": { "name": "shuaibilx" },
   "skills": "./skills/",
   "interface": {
@@ -10,8 +10,6 @@
     "developerName": "shuaibilx"
   },
   "extensions": {
-    "com.openai": {
-      "onboardingSkill": "./skills/ai-workflow-setup/SKILL.md"
-    }
+    "com.openai": { "onboardingSkill": "ai-workflow-setup" }
   }
 }

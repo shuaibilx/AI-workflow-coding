@@ -10,16 +10,17 @@ Usage:
   ai-workflow update [--plugin] [--latest] [--dry-run]
   ai-workflow init --project <directory> [--dry-run]
 
-setup      Check Node/npm/Git, install missing dependencies, and verify readiness.
-install    Install bundled workflow and missing global dependencies; preserve existing skills.
-doctor     Read-only dependency check (exit 1 if anything is missing).
-update     Refresh managed skills to this package's pinned dependencies.
+setup      Check readiness; in Plugin mode install only a missing OpenSpec CLI.
+install    Install missing global dependencies for a standalone workflow.
+doctor     Read-only check of bundled Plugin skills, OpenSpec, and GitHub readiness.
+update     Update standalone managed skills, or Plugin-managed OpenSpec CLI.
 --latest   Resolve upstream HEAD/registry versions explicitly; compatibility is unverified.
---plugin   Use the workflow bundled in this plugin; never copy/update a standalone workflow.
+--plugin   Use bundled Plugin skills; never download them or copy/update standalone skills.
 --json     Return structured results (or an error) and diagnostic messages for any command.
 init       Initialize OpenSpec only in the explicitly named project.
 
-The installer does not publish packages, initialize Git, or upgrade unmanaged dependencies.
+Plugin installs include all fixed workflow skills. OpenSpec CLI remains a global executable.
+Setup checks GitHub delivery readiness separately; the installer never initializes Git or publishes changes.
 `;
 
 const json = process.argv.slice(2).includes('--json');
@@ -40,8 +41,6 @@ try {
       else throw new Error(`Unknown or incomplete option: ${arg}`);
     }
     if (options.project && options.command !== 'init') throw new Error('--project is supported only by init');
-    const [major, minor] = process.versions.node.split('.').map(Number);
-    if (major < 22 || (major === 22 && minor < 20)) throw new Error('Node.js >=22.20.0 is required.');
     const result = await execute(options, json ? { log: (line) => messages.push(line) } : undefined);
     if (json) console.log(JSON.stringify({ ...result, messages }));
     if (!result.ok) process.exitCode = 1;

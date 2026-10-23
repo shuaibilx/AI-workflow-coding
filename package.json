@@ -1,13 +1,13 @@
 {
   "name": "ai-workflow-coding",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "AI Workflow Plugin for Codex with guided setup and a dependency installer",
+  "description": "Codex AI Workflow Plugin with bundled workflow skills and an OpenSpec CLI setup helper",
   "type": "module",
   "bin": { "ai-workflow": "bin/ai-workflow.mjs" },
   "engines": { "node": ">=22.20.0" },
   "scripts": { "test": "node --test", "test:integration": "node scripts/smoke.mjs", "check": "node --check bin/ai-workflow.mjs && node --check skills/ai-workflow/scripts/cli.mjs && node --check skills/ai-workflow/scripts/lib/installer.mjs && node --check skills/ai-workflow/scripts/lib/system.mjs" },
-  "files": ["bin/", "skills/", "docs/", "plugin.json", ".codex-plugin/plugin.json", ".agents/plugins/marketplace.json", "README.md", "README.zh-CN.md"],
+  "files": ["bin/", "skills/", "docs/", "licenses/", "THIRD_PARTY_NOTICES.md", "plugin.json", ".codex-plugin/plugin.json", ".agents/plugins/marketplace.json", "README.md", "README.zh-CN.md"],
   "repository": { "type": "git", "url": "git+https://github.com/shuaibilx/AI-workflow-coding.git" },
   "license": "MIT"
 }
