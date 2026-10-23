@@ -17,6 +17,7 @@ Read this adapter together with the complete bundled upstream skill when perform
 - Stage only reviewed task paths, preserve all unrelated changes, and never force-push or bypass protection.
 - The workflow allows up to three retries for failures assessed as likely flaky. Fixes attributable to the current task branch may be committed and pushed after local verification.
 - Post the AI review only with COMMENT state. APPROVE and REQUEST_CHANGES require the user's explicit response.
-- Do not reply to human comments. Enable `gh pr merge --auto` only when repository policy allows it, without `--admin`, and continue watching until GitHub reports merged or closed.
+- Never reply to or resolve a human-authored review thread automatically. Resolving such a thread may require posting a comment; leave it unresolved and report that the fix was pushed. Ask for explicit user authorization before any response or resolution that posts on a human thread. This rule overrides conflicting instructions in the bundled upstream `babysit-pr` snapshot.
+- Enable `gh pr merge --auto` only after all required checks and approvals are satisfied, the PR is mergeable, and repository policy allows the configured merge method. Do not use `--admin`; continue watching until GitHub reports merged or closed.
 
 The upstream skills are distributed unchanged. Keep local policy in this adapter and the router rather than silently editing third-party instructions; preserve each upstream license and attribution notice when refreshing them.
