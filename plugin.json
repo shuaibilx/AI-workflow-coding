@@ -1,15 +1,14 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "ai-workflow",
-  "version": "0.2.0",
-  "description": "A Codex development workflow with guided dependency setup, OpenSpec planning, implementation, and review.",
+  "version": "0.3.0",
+  "description": "A Codex development workflow with bundled skills, OpenSpec planning, implementation, and review.",
   "author": { "name": "shuaibilx" },
   "repository": "https://github.com/shuaibilx/AI-workflow-coding",
   "license": "MIT",
   "keywords": ["codex", "workflow", "openspec", "skills"],
   "extensions": {
     "com.openai": {
-      "onboardingSkill": "./skills/ai-workflow-setup/SKILL.md",
       "interface": {
         "displayName": "AI Workflow Plugin",
         "shortDescription": "Clarify, plan, implement, and review with Codex.",

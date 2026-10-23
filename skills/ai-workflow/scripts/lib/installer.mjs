@@ -69,6 +69,11 @@ function validateManifest(manifest) {
   }
 }
 
+function assertPluginSkillsComplete(items) {
+  const missing = items.filter(({ name, action }) => !['ai-workflow', 'openspec'].includes(name) && action === 'missing');
+  if (missing.length) throw new Error(`Plugin package is incomplete; missing bundled skills: ${missing.map(({ name }) => name).join(', ')}. Refresh or reinstall the Plugin.`);
+}
+
 async function verifyPlugin(skillRoot) {
   const root = resolve(skillRoot, '../..');
   const portable = join(root, 'plugin.json');
@@ -114,13 +119,24 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
   if (plugin) await verifyPlugin(skillRoot);
   if (command === 'setup') {
     const prerequisites = [{ name: 'node', version: process.versions.node }];
-    for (const tool of ['npm', 'git']) {
-      const result = await run(tool, ['--version']);
-      prerequisites.push({ name: tool, version: result.stdout.trim() });
-    }
-    for (const { name, version } of prerequisites) log(`ok prerequisite ${name}: ${version}`);
+    log(`ok prerequisite node: ${process.versions.node}`);
     const before = await execute({ ...options, command: 'doctor' }, { run, log });
-    const installation = before.ok ? null : await execute({ ...options, command: 'install' }, { run, log });
+    let installation = null;
+    if (!before.ok) {
+      if (plugin) {
+        assertPluginSkillsComplete(before.items);
+        const result = await run('npm', ['--version']);
+        prerequisites.push({ name: 'npm', version: result.stdout.trim() });
+        log(`ok prerequisite npm: ${result.stdout.trim()}`);
+      } else {
+        for (const tool of ['npm', 'git']) {
+          const result = await run(tool, ['--version']);
+          prerequisites.push({ name: tool, version: result.stdout.trim() });
+          log(`ok prerequisite ${tool}: ${result.stdout.trim()}`);
+        }
+      }
+      installation = await execute({ ...options, command: 'install' }, { run, log });
+    }
     const after = await execute({ ...options, command: 'doctor' }, { run, log });
     const changes = installation?.items.filter(({ action }) => action !== 'skip') || [];
     log(after.ok ? 'Setup complete: required dependencies are available.' : 'Setup incomplete: required dependencies are still missing.');
@@ -164,17 +180,26 @@ export async function execute(options = {}, { run = runCommand, log = console.lo
   add('openspec', command === 'doctor' ? (openspecVersion ? 'ok' : 'missing') : openspecAction, openspecVersion || manifest.openspec.version);
 
   const skillItems = [];
+  const pluginSkillsRoot = plugin ? join(resolve(skillRoot, '../..'), 'skills') : null;
   for (const dependency of manifest.skills) {
-    const path = await locateSkill(home, dependency.name);
-    const managed = Boolean(state.skills[dependency.name]?.managed && state.skills[dependency.name].path === path);
+    const path = plugin
+      ? (await exists(join(pluginSkillsRoot, dependency.name, 'SKILL.md')) ? join(pluginSkillsRoot, dependency.name) : null)
+      : await locateSkill(home, dependency.name);
+    const managed = plugin ? false : Boolean(state.skills[dependency.name]?.managed && state.skills[dependency.name].path === path);
     if (path && managed && command === 'update' && await digestTree(path) !== state.skills[dependency.name].digest) {
       throw new Error(`Managed skill was locally modified: ${path}. Preserve your edits before updating.`);
     }
-    const action = path ? (command === 'update' && managed ? 'update' : 'skip') : 'install';
-    const item = add(dependency.name, command === 'doctor' ? (path ? 'ok' : 'missing') : action, path ? (managed ? 'managed' : 'existing; unmanaged, preserved') : dependency.repository);
-    skillItems.push({ ...dependency, ...item, path, managed });
+    const action = plugin ? (path ? (command === 'doctor' ? 'ok' : 'skip') : 'missing')
+      : path ? (command === 'update' && managed ? 'update' : 'skip') : 'install';
+    const detail = plugin ? (path ? `${path} (bundled by plugin)` : `expected bundled skill at ${join(pluginSkillsRoot, dependency.name)}`)
+      : path ? (managed ? 'managed' : 'existing; unmanaged, preserved') : dependency.repository;
+    const item = add(dependency.name, command === 'doctor' && !plugin ? (path ? 'ok' : 'missing') : action, detail);
+    skillItems.push({ ...dependency, ...item, path, managed, bundled: plugin });
   }
   if (command === 'doctor') return { ok: items.every((item) => item.action === 'ok'), items };
+  if (plugin) {
+    assertPluginSkillsComplete(skillItems);
+  }
   if (dryRun) {
     if (latest) log('Upstream refs/versions would be resolved during update; dry-run does not fetch them.');
     return { ok: true, items };

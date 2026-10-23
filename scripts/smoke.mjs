@@ -22,8 +22,13 @@ const run = (file, args) => runCommand(process.execPath, [file, ...args], { env,
 
 try {
   const pluginEntry = join(projectRoot, 'skills', 'ai-workflow', 'scripts', 'cli.mjs');
+  const manifest = JSON.parse(await readFile(join(projectRoot, 'skills', 'ai-workflow', 'config', 'dependencies.json'), 'utf8'));
   const pluginSetup = JSON.parse((await run(pluginEntry, ['setup', '--plugin', '--json'])).stdout);
   assert.equal(pluginSetup.ok, true);
+  for (const { name } of manifest.skills) {
+    await access(join(projectRoot, 'skills', name, 'SKILL.md'));
+    await assert.rejects(access(join(home, '.agents', 'skills', name)));
+  }
   console.log(`Plugin setup installed: ${pluginSetup.changes.map(({ name }) => name).join(', ')}`);
   await run(pluginEntry, ['doctor', '--plugin']);
   await assert.rejects(access(join(home, '.agents', 'skills', 'ai-workflow')));
@@ -32,7 +37,6 @@ try {
   const sourceEntry = join(projectRoot, 'bin', 'ai-workflow.mjs');
   const first = await run(sourceEntry, ['install']);
   console.log(first.stdout.trim());
-  const manifest = JSON.parse(await readFile(join(projectRoot, 'skills', 'ai-workflow', 'config', 'dependencies.json'), 'utf8'));
   const lock = JSON.parse(await readFile(join(home, '.agents', '.skill-lock.json'), 'utf8'));
   for (const skill of manifest.skills) {
     assert.equal(lock.skills[skill.name].ref, skill.ref, `pinned revision: ${skill.name}`);

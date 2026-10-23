@@ -18,6 +18,11 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
   await writeFile(join(packageRoot, 'package.json'), JSON.stringify({ version: '0.1.0' }));
   await writeFile(join(packageRoot, 'skills', 'ai-workflow', 'SKILL.md'), '---\nname: ai-workflow\ndescription: fixture\n---\nworkflow\n');
   await writeFile(join(packageRoot, 'skills', 'ai-workflow', 'references', 'planning.md'), 'planning fixture');
+  for (const skill of skillDependencies) {
+    const directory = join(packageRoot, 'skills', skill.name);
+    await mkdir(directory, { recursive: true });
+    await writeFile(join(directory, 'SKILL.md'), `---\nname: ${skill.name}\ndescription: bundled fixture\n---\n`);
+  }
   await writeFile(join(packageRoot, 'config', 'dependencies.json'), JSON.stringify({
     schemaVersion: 1, workflowVersion: '0.1.0',
     skillsCli: { version: '1.7.4' },
@@ -65,13 +70,17 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
   return { root, home, packageRoot, project, run, calls, invoke };
 }
 
-test('the bundled manifest installs pr and leaves conditional skills opt-in', async (t) => {
+test('the bundled manifest lists the fixed skills and each is vendored in the plugin', async (t) => {
   const manifestPath = new URL('../skills/ai-workflow/config/dependencies.json', import.meta.url);
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const pr = manifest.skills.find((skill) => skill.name === 'pr');
   assert.ok(pr, 'pr must be part of the standard dependency set');
   assert.equal(pr.repository, 'mattpocock/skills');
   assert.match(pr.ref, /^[a-f0-9]{40}$/);
+  for (const { name } of manifest.skills) {
+    assert.match(await readFile(new URL(`../skills/${name}/SKILL.md`, import.meta.url), 'utf8'), /^---\nname:/);
+  }
+  assert.match(await readFile(new URL('../THIRD_PARTY_NOTICES.md', import.meta.url), 'utf8'), /Apache-2\.0|MIT/);
   for (const name of ['tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents', 'setup-matt-pocock-skills']) {
     assert.equal(manifest.skills.some((skill) => skill.name === name), false, `${name} must remain conditional`);
   }
@@ -112,18 +121,21 @@ test('repeated install preserves existing skills and avoids downloads', async (t
   assert.equal(f.calls.some((call) => call.args.includes('add')), false);
 });
 
-test('plugin setup supplies its bundled workflow without making a global copy', async (t) => {
+test('plugin setup uses bundled skills and installs only the missing OpenSpec CLI', async (t) => {
   const f = await fixture(t, { existingCli: false });
   await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
   const before = await f.invoke({ command: 'doctor', plugin: true });
   assert.equal(before.items.find((item) => item.name === 'ai-workflow').action, 'ok');
   assert.equal(before.ok, false, 'missing external dependencies still fail doctor');
+  assert.equal(before.items.find((item) => item.name === 'grilling').action, 'ok');
   await assert.rejects(access(f.home), 'doctor must stay read-only');
   await f.invoke({ plugin: true });
   assert.equal((await f.invoke({ command: 'doctor', plugin: true })).ok, true);
   await assert.rejects(access(join(f.home, '.agents', 'skills', 'ai-workflow')));
   const state = JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8'));
   assert.equal(state.main, undefined, 'the plugin manager owns the bundled workflow');
+  assert.equal(state.skills.grilling, undefined, 'plugin skills are not copied into or tracked as global skills');
+  assert.equal(f.calls.some(({ args }) => args.includes('add')), false, 'plugin mode never downloads bundled skills');
   f.calls.length = 0;
   await f.invoke({ plugin: true });
   assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
@@ -151,20 +163,31 @@ test('plugin mode refuses to substitute an unrelated or absent package for the w
   await assert.rejects(access(f.home));
 });
 
-test('setup owns prerequisite checks, missing installs, and final dependency verification', async (t) => {
+test('plugin setup checks the bundled files and installs only the missing OpenSpec CLI', async (t) => {
   const f = await fixture(t, { existingCli: false });
   await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
   const result = await f.invoke({ command: 'setup', plugin: true });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.prerequisites.map(({ name }) => name), ['node', 'npm', 'git']);
-  assert.deepEqual(result.changes.map(({ name }) => name), ['openspec', 'grilling']);
+  assert.deepEqual(result.prerequisites.map(({ name }) => name), ['node', 'npm']);
+  assert.deepEqual(result.changes.map(({ name }) => name), ['openspec']);
   assert.equal(result.items.every(({ action }) => action === 'ok'), true);
   await assert.rejects(access(join(f.home, '.agents', 'skills', 'ai-workflow')));
   await assert.rejects(access(join(f.project, 'openspec')));
   f.calls.length = 0;
   const repeat = await f.invoke({ command: 'setup', plugin: true });
   assert.deepEqual(repeat.changes, []);
-  assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
+  assert.equal(f.calls.some(({ args }) => args.includes('add') || (args[0] === 'install' && args.some((arg) => String(arg).includes('@fission-ai/openspec')))), false);
+});
+
+test('plugin mode reports an incomplete package and never downloads a replacement skill', async (t) => {
+  const f = await fixture(t);
+  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
+  await rm(join(f.packageRoot, 'skills', 'grilling'), { recursive: true });
+  const check = await f.invoke({ command: 'doctor', plugin: true });
+  assert.equal(check.items.find((item) => item.name === 'grilling').action, 'missing');
+  await assert.rejects(f.invoke({ plugin: true }), /incomplete.*grilling/i);
+  assert.equal(f.calls.some(({ args }) => args.includes('add')), false);
+  await assert.rejects(access(f.home));
 });
 
 test('setup stops before mutation if a toolchain prerequisite is unavailable', async (t) => {
@@ -180,17 +203,20 @@ test('setup stops before mutation if a toolchain prerequisite is unavailable', a
   assert.equal(f.calls.some(({ args }) => args.includes('add') || args[0] === 'install'), false);
 });
 
-test('a failed setup distinguishes verified completed installs from its proposed actions', async (t) => {
+test('a failed standalone setup distinguishes verified completed installs from proposed actions', async (t) => {
   const f = await fixture(t, { existingCli: false, failDownload: true });
-  await writeFile(join(f.packageRoot, 'plugin.json'), JSON.stringify({ name: 'ai-workflow' }));
   const logs = [];
-  await assert.rejects(execute({ command: 'setup', home: f.home, skillRoot: join(f.packageRoot, 'skills', 'ai-workflow'), plugin: true }, {
+  await assert.rejects(execute({ command: 'setup', home: f.home, skillRoot: join(f.packageRoot, 'skills', 'ai-workflow') }, {
     run: f.run, log: (line) => logs.push(line),
   }), /network unavailable/);
-  assert.deepEqual(logs.filter((line) => line.startsWith('completed ')), ['completed install openspec: 1.14.3']);
+  assert.deepEqual(logs.filter((line) => line.startsWith('completed ')), [
+    `completed install ai-workflow: ${join(f.home, '.agents', 'skills', 'ai-workflow')}`,
+    'completed install openspec: 1.14.3',
+  ]);
   const state = JSON.parse(await readFile(join(f.home, '.ai-workflow', 'state.json'), 'utf8'));
   assert.equal(state.openspec.version, '1.14.3');
-  assert.equal(state.skills.grilling, undefined);
+  assert.ok(state.main, 'the standalone workflow install completed before the dependency download failed');
+  assert.equal(state.skills.grilling, undefined, 'failed dependency downloads are not recorded as installed');
 });
 
 test('existing user skills in the legacy Codex location are preserved even by update', async (t) => {

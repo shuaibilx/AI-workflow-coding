@@ -10,15 +10,16 @@ Usage:
   ai-workflow update [--plugin] [--latest] [--dry-run]
   ai-workflow init --project <directory> [--dry-run]
 
-setup      Check Node/npm/Git, install missing dependencies, and verify readiness.
-install    Install bundled workflow and missing global dependencies; preserve existing skills.
-doctor     Read-only dependency check (exit 1 if anything is missing).
-update     Refresh managed skills to this package's pinned dependencies.
+setup      Check readiness; in Plugin mode install only a missing OpenSpec CLI.
+install    Install missing global dependencies for a standalone workflow.
+doctor     Read-only check of bundled Plugin skills and the OpenSpec CLI.
+update     Update standalone managed skills, or Plugin-managed OpenSpec CLI.
 --latest   Resolve upstream HEAD/registry versions explicitly; compatibility is unverified.
---plugin   Use the workflow bundled in this plugin; never copy/update a standalone workflow.
+--plugin   Use bundled Plugin skills; never download them or copy/update standalone skills.
 --json     Return structured results (or an error) and diagnostic messages for any command.
 init       Initialize OpenSpec only in the explicitly named project.
 
+Plugin installs already include five fixed skills. OpenSpec CLI remains an external executable.
 The installer does not publish packages, initialize Git, or upgrade unmanaged dependencies.
 `;
 

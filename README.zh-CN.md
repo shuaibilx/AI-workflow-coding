@@ -12,7 +12,7 @@
 
 </div>
 
-AI Workflow Plugin 为 Codex 提供从需求澄清、技术选型、技能发现到 OpenSpec 规划、实现、验证和审查的开发工作流。插件包含模块化的 `ai-workflow` skill、首次设置 skill 和依赖管理 CLI，负责传递各阶段的决策，并根据任务规模调整流程。
+AI Workflow Plugin 为 Codex 提供从需求澄清、技术选型、技能发现到 OpenSpec 规划、实现、验证和审查的开发工作流。插件包含模块化的 `ai-workflow` skill、五个固定工作流技能、可选环境辅助 skill 和依赖管理 CLI，负责传递各阶段的决策，并根据任务规模调整流程。
 
 ## 为什么做这个 skill
 
@@ -50,7 +50,7 @@ flowchart LR
     classDef optional fill:#fff7ed,stroke:#f97316,color:#7c2d12,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
-蓝色文字表示技能和工具，普通文字说明其作用和触发条件。虚线分支均为可选流程，需由用户主动触发。在新增的技能中，只有 `pr` 纳入常规全局依赖；其他任务专用技能在命中时安装到项目中。
+蓝色文字表示技能和工具，普通文字说明其作用和触发条件。虚线分支均为可选流程，需由用户主动触发。Plugin 将 `grilling`、`find-skills`、`codebase-design`、`code-review` 和 `pr` 与主工作流一起打包；任务专用技能仍按需选择并安装到项目中。
 
 Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求尚不明确的任务；它不会产生第二份事实来源。只有仍有问题待查时，才用 `openspec-explore` 调查代码库事实或方案可行性。OpenSpec 提案记录已确认的决策、选中的技能、测试 seam 和任务，展示后等待用户要求实施。小修复直接进入实施和审查；完整变更在检查通过后同步规范并归档，然后起草 PR 文案；提交、push 和创建 PR 都是单独的可选动作。设计问题未解决时使用 `openspec-explore`；本工作流不路由到 `prototype`。
 
@@ -67,7 +67,7 @@ Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求
 
 ## 快速开始
 
-需要 **Codex、Node.js 22.20.0 或更高版本、npm 和 Git**。安装程序面向 Windows、macOS 和 Linux，CI 覆盖这三个系统。Windows 使用 PowerShell 7。
+安装并调用 Plugin 需要 **Codex**。完整的 OpenSpec 工作流还需要 OpenSpec CLI；只有在准备环境或执行项目操作时才需要 Node.js 22.20.0+、npm 和 Git。工具支持 Windows、macOS 和 Linux，CI 会覆盖这三个系统。Windows 使用 PowerShell 7。
 
 ### 从本仓库安装 Plugin
 
@@ -80,35 +80,26 @@ codex plugin add ai-workflow@ai-workflow-coding
 
 安装后重启 Codex 或开启新对话，以加载插件技能。这是本仓库提供的 marketplace 安装渠道，不表示已经上架官方 Plugin Directory。
 
-### 运行首次设置
+### 安装后直接开始
 
-如果客户端提供插件的 **Setup／设置** 操作，直接运行；也可以在 Codex 技能列表中选择 **AI Workflow Plugin Setup**，然后输入：
-
-```text
-$ai-workflow:ai-workflow-setup 安装缺少的依赖，并检查环境是否准备就绪。
-```
-
-插件技能使用上述命名空间，便于与独立安装版本区分。manifest 已声明 onboarding skill；未显示 Setup 按钮的客户端也可直接调用这个技能。
-
-```mermaid
-flowchart LR
-    A[安装 Plugin] --> S["首次设置技能<br/><b>ai-workflow-setup</b>"]
-    S --> C["CLI：setup --plugin<br/>检查工具链与依赖"]
-    C -->|存在缺失项| I["安装缺失依赖<br/><b>CLI：install</b>"]
-    C -->|依赖已齐全| V["复查并报告<br/><b>CLI：doctor</b>"]
-    I --> V
-    V --> W["开始开发任务<br/><b>ai-workflow</b>"]
-```
-
-一次 setup 请求即授权完成缺失依赖的安装和最终复查，不会逐项重复询问。已有依赖会保留；主工作流直接使用 Plugin 内的版本，不再复制到全局 skill 目录。发现旧的独立安装入口时会提示并保留。如果缺少 Node/npm/Git，设置会停止并说明需要先解决的前置条件。安装 Plugin 本身不会执行全局依赖安装。
-
-首次设置技能调用包内的单条命令 `setup --plugin --json`。CLI 负责“检查—安装—复查”并返回结构化结果，skill 负责解释结果、处理用户明确指定的项目。目录编排及借鉴 OpenSpec 的职责划分见 [Skill + CLI 架构说明](docs/architecture.md)。
-
-如果还需要初始化 OpenSpec，请在 setup 请求中明确指定项目路径；否则首次设置只准备依赖。之后选择插件中的 **AI Workflow** 技能开始任务：
+固定工作流技能已随 Plugin 一起分发，安装后即可开始任务，无需先安装 skill 依赖。先调用主工作流：
 
 ```text
 $ai-workflow:ai-workflow 帮我澄清并规划当前项目的 CSV 导出功能。
 ```
+
+也可以单独调用已打包的依赖，例如 `$ai-workflow:grilling`、`$ai-workflow:find-skills`、`$ai-workflow:codebase-design`、`$ai-workflow:code-review` 和 `$ai-workflow:pr`。主工作流会在对应阶段选择它们；只有想单独使用某个技能时，才需要直接调用。
+
+```mermaid
+flowchart LR
+    A[安装 Plugin] --> W["开始开发任务<br/><b>ai-workflow</b>"]
+    W --> S["按阶段选择内置 skills<br/><b>grilling · find-skills · codebase-design · code-review · pr</b>"]
+    S --> D["继续工作流"]
+    A -.->|可选：检查环境| C["CLI：doctor --plugin<br/>检查内置技能 + OpenSpec CLI"]
+    C -.->|缺少 OpenSpec 且用户要求设置| I["CLI：setup --plugin<br/>只安装 OpenSpec CLI"]
+```
+
+环境检查是可选的。`doctor --plugin` 只检查 Plugin 内置技能和 OpenSpec CLI；若缺少 OpenSpec 且你明确要求准备环境，`setup --plugin` 会安装 CLI，不会下载已打包的 skills，也不会初始化项目。目录编排及借鉴 OpenSpec 的职责划分见 [Skill + CLI 架构说明](docs/architecture.md)。
 
 ### 也支持独立 skill 安装
 
@@ -156,20 +147,20 @@ $ai-workflow:ai-workflow 从现有状态继续 CSV 导出变更。
 
 ## 安装了什么
 
-Plugin 携带主工作流与首次设置技能；setup 安装缺少的全局基础技能（`grilling`、`find-skills`、`codebase-design`、`code-review`、`pr`）和 OpenSpec CLI。任务专用技能及可选仓库配置另行处理：
+Plugin 携带主工作流和五个固定依赖技能。安装 Plugin 后，Codex 即可通过 `ai-workflow` 命名空间发现这六个技能，无需首次安装技能依赖。OpenSpec CLI 仍是单独的 npm 可执行程序。任务专用技能及可选仓库配置另行处理：
 
 | 内容 | 位置与行为 |
 | --- | --- |
-| Plugin 内的主工作流、setup 和 CLI | Codex 管理的插件安装目录，随 Plugin 更新 |
-| 常规第三方技能 | 用户 `.agents/skills/`；也检测旧位置 `.codex/skills/` 中的已有依赖 |
-| 独立版 AI Workflow（另一安装方式） | 用户 `.agents/skills/ai-workflow`；Plugin setup 不会创建或替换它 |
+| Plugin 内的主工作流和五个固定技能 | Codex 管理的插件 `skills/` 目录，随 Plugin 更新 |
+| 可选环境辅助 skill 和 CLI | 插件安装目录；仅在用户要求时检查或安装 OpenSpec CLI |
+| 独立版 AI Workflow（另一安装方式） | 用户 `.agents/skills/ai-workflow`；Plugin 不会创建或替换它 |
 | OpenSpec CLI | npm 全局；保留已有 CLI |
 | OpenSpec 项目文件 | 仅在明确选定的项目中初始化 |
 | 任务专用技能（`tdd`、`diagnosing-bugs`、`research`、`domain-modeling`、`writing-for-agents`、`create-pull-request`、`babysit-pr` 或更匹配的候选项） | 按任务选择，获准后安装到项目 `.agents/skills/` |
 | `setup-matt-pocock-skills` | 可选、由用户主动调用的一次性仓库引导；不是 OpenSpec 的前置条件 |
 | 安装器的托管记录 | 用户 `.ai-workflow/state.json`，与 skills CLI 的锁文件分开 |
 
-第三方 skill 从各自上游仓库下载，来源和固定 Git commit 记录在 [dependencies.json](skills/ai-workflow/config/dependencies.json)。本 Plugin 不打包第三方源文件副本。
+打包的 skills 来自 [dependencies.json](skills/ai-workflow/config/dependencies.json) 中记录的固定 Git commit。上游许可文本和归属信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。更新 Plugin 后即可获取新版本；独立安装版仍从各自上游更新。
 
 完整流程默认使用 `pr` 根据最终 diff 和实际验证证据起草 PR 文案。提交、push 和创建 PR 是独立可选动作：`create-pull-request` 只执行用户明确要求的操作；只有用户要求持续跟进已创建 PR 时才使用 `babysit-pr`。Git 初始化由工作流自己的仓库引导说明处理，不增加额外依赖。其他新增 skill 仅在触发条件匹配时选择；可选 setup 将 issue tracker 留给 backlog/triage，不替代 OpenSpec 的变更计划。
 
@@ -177,16 +168,16 @@ Plugin 携带主工作流与首次设置技能；setup 安装缺少的全局基�
 
 ## 检查、初始化与更新
 
-**Plugin 安装**可以直接选择首次设置技能进行诊断或补装依赖。更新 Git marketplace 并安装其中当前的插件版本：
+需要检查环境时，可运行包内 CLI 的 `doctor --plugin`。更新 Git marketplace 并安装其中当前的插件版本：
 
 ```sh
 codex plugin marketplace upgrade ai-workflow-coding
 codex plugin add ai-workflow@ai-workflow-coding
 ```
 
-更新后重启 Codex 或开启新对话。本地路径 marketplace 则读取你的 checkout，需要先更新 checkout 再重新安装。依赖更新与 Plugin 更新分开：需要升级托管依赖时，让 Codex 调用包内 CLI 的 `update --plugin --dry-run`，再执行 `update --plugin`。setup 本身只补装缺失项，不升级已有依赖。
+更新后重启 Codex 或开启新对话。本地路径 marketplace 则读取你的 checkout，需要先更新 checkout 再重新安装。内置技能随 Plugin 发布更新；CLI 的 `update --plugin` 只管理此前由安装器安装的 OpenSpec CLI，不会下载或更新 skills。
 
-手动诊断 Plugin 时，先确定实际安装目录，再运行 `node "<plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin`。`--plugin` 要求有效的插件包，并避免复制或更新独立主 skill；自动化脚本中不要写死带版本号的缓存路径。
+手动诊断或设置 Plugin 时，先确定实际安装目录，再运行 `node "<plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin` 或 `setup --plugin`。`--plugin` 要求有效的插件包、检查固定 skills 是否完整，并避免复制或更新独立全局 skills；自动化脚本中不要写死带版本号的缓存路径。
 
 **独立版全局安装**后，以下路径写法适用于 POSIX shell 和 PowerShell：
 
@@ -226,7 +217,7 @@ OpenSpec CLI 升级后，刷新项目内的生成指令是另一个明确操作�
 
 ## 主入口简短，阶段说明按需加载
 
-Plugin 的入口为 `plugin.json`（通用 manifest）、`.codex-plugin/plugin.json`（Codex 兼容配置）和 `.agents/plugins/marketplace.json`（仓库 marketplace）。`skills/ai-workflow-setup/` 是首次设置技能；主工作流继续保持模块化结构：
+Plugin 的入口为 `plugin.json`（通用 manifest）、`.codex-plugin/plugin.json`（Codex 兼容配置）和 `.agents/plugins/marketplace.json`（仓库 marketplace）。`skills/ai-workflow-setup/` 是可选环境辅助 skill，不是首次安装的门槛；主工作流继续保持模块化结构：
 
 ```text
 skills/ai-workflow/

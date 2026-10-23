@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "workflowVersion": "0.2.0",
+  "workflowVersion": "0.3.0",
   "selectedAt": "2026-10-21",
   "skillsCli": { "version": "1.7.4" },
   "openspec": { "package": "@fission-ai/openspec", "version": "1.14.3" },
