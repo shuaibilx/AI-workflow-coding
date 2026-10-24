@@ -4,7 +4,7 @@ description: Prepare and verify local OpenSpec and GitHub prerequisites for an A
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.5.0"
+  version: "0.5.1"
 ---
 
 # AI Workflow setup

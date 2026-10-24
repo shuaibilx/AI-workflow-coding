@@ -4,7 +4,7 @@ description: Coordinate a Codex AI development workflow from requirements and te
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.5.0"
+  version: "0.5.1"
 ---
 
 # AI Workflow

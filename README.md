@@ -91,7 +91,7 @@ $ai-workflow:ai-workflow Help me clarify and propose a CSV export feature in thi
 
 The bundled dependencies are also available by name, including `$ai-workflow:grilling`, `$ai-workflow:openspec-propose`, `$ai-workflow:tdd`, `$ai-workflow:create-pull-request`, and `$ai-workflow:babysit-pr`. The main workflow selects them at the relevant stages; call one directly when you want that skill alone.
 
-In Codex, open `/skills` to browse installed skills, or invoke one directly with `$ai-workflow:<skill-name>`, such as `$ai-workflow:openspec-propose`. Typing `/ai workflow` selects a matching workflow entry; it is not the complete skill inventory. Codex loads skills from the installed Plugin version, not from this repository's source folder. If a bundled skill is missing, update the marketplace, reinstall the Plugin, and start a new chat using the commands below.
+In Codex, open `/skills` to browse the installed skill catalog, including all 21 skills bundled by this Plugin. Invoke one directly with `$ai-workflow:<skill-name>`, such as `$ai-workflow:openspec-propose`. The `/ai workflow` autocomplete is filtered to matching entries; it does not enumerate all bundled skills. Codex loads skills from the installed Plugin version, not from this repository's source folder. If a bundled skill is missing, update the marketplace, reinstall the Plugin, and start a new chat using the commands below.
 
 ```mermaid
 flowchart LR
@@ -99,11 +99,11 @@ flowchart LR
     W -->|Full workflow| C["Automatic preflight<br/><b>ai-workflow-setup</b> + CLI setup --plugin<br/>Check bundle, OpenSpec, Git, gh/auth"]
     C --> B["Create/reuse task branch<br/><b>create-pull-request</b>"]
     B --> S["Use bundled skills by phase<br/><b>grilling · OpenSpec · TDD · review · GitHub</b>"]
-    S --> D["Verify, create PR, comment review,<br/>monitor and auto-merge by repo rules"]
+    S --> D["Verify, create PR, comment review,<br/>monitor / auto-merge by repo rules,<br/>clean task branch after merge"]
     W -->|Small fix| F["Focused implementation + review<br/>No mandatory setup or auto-publish"]
 ```
 
-Full workflows automatically run `setup --plugin`: it verifies bundled skills, installs only a missing pinned OpenSpec CLI globally, and reports GitHub readiness separately. It never downloads bundled skills or initializes a project. GitHub delivery is paused when Git/`gh`/auth is unavailable; small fixes skip setup and automatic publishing. See [Skill + CLI architecture](docs/architecture.md) for package layout and the patterns adapted from OpenSpec.
+Full workflows automatically run `setup --plugin`: it verifies bundled skills, installs only a missing pinned OpenSpec CLI globally, and reports GitHub readiness separately. It never downloads bundled skills or initializes a project. After a PR is confirmed merged, the workflow deletes its remote task branch if it still points to that PR; it syncs the local default branch and removes the local task branch only when the checkout is clean and safe to fast-forward. Otherwise it preserves the checkout and reports why cleanup was skipped. GitHub delivery is paused when Git/`gh`/auth is unavailable; small fixes skip setup and automatic publishing. See [Skill + CLI architecture](docs/architecture.md) for package layout and the patterns adapted from OpenSpec.
 
 ### Standalone skill installation (also supported)
 
@@ -167,7 +167,7 @@ The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) 
 
 The fixed bundle includes `grilling`, `find-skills`, `codebase-design`, `code-review`, `pr`; six OpenSpec skills; `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`, `setup-matt-pocock-skills`; and `create-pull-request`, `babysit-pr`. Sources, revisions/snapshot dates, and licenses are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Refresh the Plugin to update bundled skills; standalone installations continue to update from their original sources.
 
-On full workflows, `pr` drafts a PR body from the final diff and verified evidence; `create-pull-request` commits only task files, pushes the task branch, and creates the PR. `code-review` results are published as a COMMENT review. The workflow asks before APPROVE or REQUEST_CHANGES, monitors through merge/close in the current Codex session, fixes branch-caused problems, and enables auto-merge only under repository rules. If GitHub is not ready, local work completes and remote delivery pauses. When no remote exists, the workflow asks for repository name and visibility before creating it. `setup-matt-pocock-skills` remains opt-in; it keeps issue tracking for backlog/triage and does not replace OpenSpec's change plan. Other conditional skills activate only when their triggers fit.
+On full workflows, `pr` drafts a PR body from the final diff and verified evidence; `create-pull-request` commits only task files, pushes the task branch, and creates the PR. `code-review` results are published as a COMMENT review. The workflow asks before APPROVE or REQUEST_CHANGES, monitors through merge/close in the current Codex session, fixes branch-caused problems, and enables auto-merge only under repository rules. After merge it removes the remote task branch when its head still matches the PR; it syncs the local default branch and removes the local task branch only when safe, otherwise preserving and reporting the checkout. If GitHub is not ready, local work completes and remote delivery pauses. When no remote exists, the workflow asks for repository name and visibility before creating it. `setup-matt-pocock-skills` remains opt-in; it keeps issue tracking for backlog/triage and does not replace OpenSpec's change plan. Other conditional skills activate only when their triggers fit.
 
 Existing unmanaged skills are reused and preserved, including during dependency updates. A directory's presence does not establish its provenance or compatibility. The installer records ownership only for dependencies it installs and detects edits before updating managed content.
 
