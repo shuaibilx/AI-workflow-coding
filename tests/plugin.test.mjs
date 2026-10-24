@@ -17,7 +17,7 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.equal(compatibility.name, portable.name);
   assert.equal(compatibility.version, portable.version);
   assert.equal(portable.version, pkg.version);
-  assert.equal(pkg.version, '0.5.1');
+  assert.equal(pkg.version, '0.6.0');
   assert.deepEqual(compatibility.interface, portable.extensions['com.openai'].interface);
   const entry = marketplace.plugins.find(({ name }) => name === portable.name);
   assert.ok(entry, 'the plugin must be addressable from its marketplace');
@@ -28,15 +28,23 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   const readmeZh = await readFile(join(repo, 'README.zh-CN.md'), 'utf8');
   assert.ok(readme.includes('/skills'), 'English README must explain how to browse installed skills');
   assert.ok(readme.includes('$ai-workflow:<skill-name>'), 'English README must explain direct skill invocation');
-  assert.ok(readme.includes('all 21 skills bundled'), 'English README must distinguish autocomplete from the full catalog');
+  assert.ok(readme.includes('all 19 skills bundled'), 'English README must distinguish autocomplete from the full catalog');
   assert.ok(readmeZh.includes('/skills'), 'Chinese README must explain how to browse installed skills');
   assert.ok(readmeZh.includes('$ai-workflow:<skill-name>'), 'Chinese README must explain direct skill invocation');
-  assert.ok(readmeZh.includes('全部 21 个技能'), 'Chinese README must distinguish autocomplete from the full catalog');
+  assert.ok(readmeZh.includes('全部 19 个技能'), 'Chinese README must distinguish autocomplete from the full catalog');
   assert.match(readme, /autocomplete is filtered/i);
   assert.match(readmeZh, /自动补全会按匹配项筛选/);
   const delivery = await readFile(join(repo, 'skills/ai-workflow/references/delivery.md'), 'utf8');
+  assert.match(delivery, /inspect the repository for a PR template/i);
+  assert.match(delivery, /Summary.*Evidence.*Merge Danger/s);
+  assert.match(delivery, /merge direction and blast radius/i);
   assert.ok(delivery.includes('--force-with-lease=refs/heads/<head-branch>:<pr-head-sha>'),
     'remote task-branch cleanup must be conditional on the merged PR head');
+  const codeReview = await readFile(join(repo, 'skills/code-review/SKILL.md'), 'utf8');
+  assert.match(codeReview, /originating OpenSpec requirements/i);
+  assert.match(codeReview, /task requirements supplied by the user/i);
+  assert.match(codeReview, /no Spec source is available/i);
+  assert.doesNotMatch(codeReview, /setup-matt-pocock-skills/);
   const packed = JSON.parse((await runCommand('npm', ['pack', '--dry-run', '--json'], { cwd: repo })).stdout)[0];
   const paths = new Set(packed.files.map(({ path }) => path));
   assert.equal([...paths].some((path) => path.startsWith('.agents/skills/openspec-')), false,
@@ -50,17 +58,25 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
     assert.ok(paths.has(path), `missing plugin resource in npm artifact: ${path}`);
   }
   const manifest = JSON.parse(await readFile(join(repo, 'skills/ai-workflow/config/dependencies.json'), 'utf8'));
+  assert.equal(manifest.pluginSkills.length, 17);
+  assert.equal(manifest.skills.length, 4);
   assert.equal(manifest.workflowVersion, pkg.version);
   for (const path of ['skills/ai-workflow/SKILL.md', 'skills/ai-workflow-setup/SKILL.md']) {
     assert.match(await readFile(join(repo, path), 'utf8'), new RegExp(`version: "${pkg.version}"`));
   }
   const bundledNames = manifest.pluginSkills.map(({ name }) => name);
   assert.deepEqual(bundledNames, [
-    'grilling', 'find-skills', 'codebase-design', 'code-review', 'pr',
+    'grilling', 'find-skills', 'codebase-design', 'code-review',
     'openspec-explore', 'openspec-propose', 'openspec-apply-change', 'openspec-archive-change', 'openspec-sync-specs', 'openspec-update-change',
-    'tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents', 'setup-matt-pocock-skills',
+    'tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents',
     'create-pull-request', 'babysit-pr',
   ]);
+  for (const removed of ['pr', 'setup-matt-pocock-skills']) {
+    assert.equal(bundledNames.includes(removed), false, `${removed} must not be exposed by the Plugin`);
+    await assert.rejects(access(join(repo, 'skills', removed)), `${removed} directory must be removed`);
+  }
+  assert.ok(bundledNames.includes('create-pull-request'));
+  assert.ok(bundledNames.includes('babysit-pr'));
   for (const { name } of manifest.pluginSkills) {
     const bundledPath = `skills/${name}/SKILL.md`;
     assert.ok(paths.has(bundledPath), `the plugin artifact must carry ${name}`);

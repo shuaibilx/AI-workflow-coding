@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "workflowVersion": "0.5.1",
+  "workflowVersion": "0.6.0",
   "runtime": { "minimumNodeVersion": "22.20.0" },
   "selectedAt": "2026-10-21",
   "skillsCli": { "version": "1.7.4" },
@@ -9,15 +9,13 @@
     { "name": "grilling", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" },
     { "name": "find-skills", "repository": "vercel-labs/skills", "ref": "a80e4c9d12d607631249d4d7d059f835d4b2f13a" },
     { "name": "codebase-design", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" },
-    { "name": "code-review", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" },
-    { "name": "pr", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" }
+    { "name": "code-review", "repository": "mattpocock/skills", "ref": "5beb35b040e3de97e54fa9e386d7e42d15c295c2" }
   ],
   "pluginSkills": [
     { "name": "grilling", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
     { "name": "find-skills", "source": "https://github.com/vercel-labs/skills", "revision": "a80e4c9d12d607631249d4d7d059f835d4b2f13a", "license": "MIT" },
     { "name": "codebase-design", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
     { "name": "code-review", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
-    { "name": "pr", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT; includes Apache-2.0 HumanLayer attribution" },
     { "name": "openspec-explore", "source": "https://github.com/Fission-AI/OpenSpec", "revision": "@fission-ai/openspec 1.14.3", "license": "MIT" },
     { "name": "openspec-propose", "source": "https://github.com/Fission-AI/OpenSpec", "revision": "@fission-ai/openspec 1.14.3", "license": "MIT" },
     { "name": "openspec-apply-change", "source": "https://github.com/Fission-AI/OpenSpec", "revision": "@fission-ai/openspec 1.14.3", "license": "MIT" },
@@ -29,7 +27,6 @@
     { "name": "research", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
     { "name": "domain-modeling", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
     { "name": "writing-for-agents", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
-    { "name": "setup-matt-pocock-skills", "source": "https://github.com/mattpocock/skills", "revision": "5beb35b040e3de97e54fa9e386d7e42d15c295c2", "license": "MIT" },
     { "name": "create-pull-request", "source": "https://github.com/cline/cline", "revision": "main snapshot retrieved 2026-10-23", "license": "Apache-2.0" },
     { "name": "babysit-pr", "source": "https://github.com/openai/codex", "revision": "main snapshot retrieved 2026-10-23", "license": "Apache-2.0" }
   ]

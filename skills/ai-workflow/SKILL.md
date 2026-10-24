@@ -4,7 +4,7 @@ description: Coordinate a Codex AI development workflow from requirements and te
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.5.1"
+  version: "0.6.0"
 ---
 
 # AI Workflow
@@ -42,7 +42,7 @@ Carry confirmed decisions through verified delivery. Respond in the user's langu
 - All fixed workflow skills ship in this Plugin. Resolve each skill through the Codex Plugin catalog and invoke it by its `ai-workflow:<skill-name>` identity when a phase needs it; do not download another copy. Technology-specific skills are dynamic: discover only those that fit the selected stack, review them before finalizing the proposal, then install the chosen project skill after the proposal is ready and implementation is authorized.
 - Reuse confirmed decisions. `$ai-workflow:openspec-explore` is conditional and does not create state required by `$ai-workflow:openspec-propose`.
 - Keep OpenSpec artifacts as the only durable implementation plan. Plan mode is optional and only helps resolve complex pre-proposal decisions; transfer useful conclusions into OpenSpec.
-- For a full workflow, use `pr` to draft the PR body from the verified change, then follow the standing full-workflow GitHub authorization in [delivery.md](references/delivery.md): task-only commit, push, PR, COMMENT-only AI review, current-session monitoring, and repository-rule-compliant auto-merge. If `gh` or auth is unavailable, finish local work and pause the remote part.
+- For a full workflow, draft PR text from verified change evidence using the template precedence and fallback format in [delivery.md](references/delivery.md), then follow the standing full-workflow GitHub authorization: task-only commit, push, PR, COMMENT-only AI review, current-session monitoring, and repository-rule-compliant auto-merge. If `gh` or auth is unavailable, finish local work and pause the remote part.
 - Small fixes do not auto-publish or auto-merge. Follow [delivery.md](references/delivery.md) only if the user separately asks for GitHub operations.
 - Respect the host's real Plan mode controls; never claim to have switched modes by writing text.
 - Installing a Plugin does not run its CLI. Full workflows invoke setup automatically; do not repeatedly ask users to run the setup command themselves.

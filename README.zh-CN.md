@@ -12,7 +12,7 @@
 
 </div>
 
-AI Workflow Plugin 为 Codex 提供从需求澄清、技术选型、技能发现到 OpenSpec 规划、实现、验证、审查和 GitHub PR 交付的开发工作流。插件包含模块化的 `ai-workflow` skill、19 个固定工作流依赖技能、setup skill 和 CLI，负责传递各阶段的决策，并根据任务规模调整流程。
+AI Workflow Plugin 为 Codex 提供从需求澄清、技术选型、技能发现到 OpenSpec 规划、实现、验证、审查和 GitHub PR 交付的开发工作流。插件包含模块化的 `ai-workflow` skill、17 个固定工作流依赖技能、setup skill 和 CLI，负责传递各阶段的决策，并根据任务规模调整流程。
 
 ## 为什么做这个 skill
 
@@ -38,16 +38,13 @@ flowchart LR
     B --> C["1. 澄清<br/><span style='color:#174ea6'><b>grilling</b></span> · 需求与验收<br/><span style='color:#174ea6'><b>Plan mode</b></span> · 复杂任务<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · 未决事实"]:::stage
     C --> P["2. 规划与提案<br/><span style='color:#174ea6'><b>find-skills</b></span> · 技术栈技能发现<br/><span style='color:#174ea6'><b>research</b></span> · 未确定的外部事实<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · 长期术语/决策<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 模块接口<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · 决策与任务"]:::stage
     P -->|用户要求实施| I["3. 实施<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · 任务<br/><span style='color:#174ea6'><b>tdd</b></span> · 已确认的测试 seam<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · 难复现 Bug/性能回退<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · 仅 agent 文档"]:::stage
-    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更<br/><span style='color:#174ea6'><b>pr</b></span> · PR 文案"]:::stage
+    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · 模板或默认格式的 PR 文案"]:::stage
     G -->|小修复| I
     V -->|修复并复查| I
     V -->|完整流程| D["5. GitHub 交付<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · 仅提交任务改动并 push、建 PR<br/>AI 审查只发 COMMENT"]:::stage
     D --> M["6. 当前 Codex 会话监控<br/><span style='color:#174ea6'><b>babysit-pr</b></span> · CI + 分支修复<br/>按仓库规则启用自动合并"]:::stage
-    G -.->|选择工程约定| R["可选仓库引导<br/><span style='color:#174ea6'><b>setup-matt-pocock-skills</b></span> · tracker + 领域文档"]:::optional
-    R -.-> C
     classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
     classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
-    classDef optional fill:#fff7ed,stroke:#f97316,color:#7c2d12,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 蓝色文字表示技能和工具，普通文字说明其作用和触发条件。小修复跳过 OpenSpec、setup 和自动 GitHub 交付。完整流程会运行 setup，并在创建 OpenSpec 工件前创建或复用任务分支。GitHub 前置条件缺失时仍可完成本地工作，但会暂停远端发布。技术栈专用技能按项目发现；所有固定工作流技能已包含在 Plugin 中。
@@ -61,10 +58,9 @@ Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求
 | 澄清 | `grilling`；Codex Plan mode（可选）；仍有未知时用 `openspec-explore` | 明确范围与验收；复杂任务时推演实现路径；调查尚未解决的代码库事实或可行性。 |
 | 规划与提案 | `find-skills`；按需 `research`、`domain-modeling`；`codebase-design`；`openspec-propose` | 定稿前评估候选技能；需要时记录带引用的研究、长期领域术语和测试 seam，再生成唯一正式提案和任务计划。 |
 | 实施 | `openspec-apply-change`；按需 `tdd`、`diagnosing-bugs`；仅编辑 agent 文档时用 `writing-for-agents` | 结合已确认的测试 seam、系统化 Bug 复现或 agent 文档规范完成任务。 |
-| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change`；`pr` | 验证行为，在本地审查规范与需求，修复并复查问题，同步并归档完整变更，然后起草 PR 文案。 |
+| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change`；`ai-workflow` | 验证行为，在本地审查规范与需求，修复并复查问题，同步并归档完整变更，然后按仓库模板或默认格式起草 PR 文案。 |
 | 完整流程 GitHub 交付 | `create-pull-request` | 检查和审查通过后，仅提交任务文件、push 并创建 PR。 |
 | PR 审查与监控 | `code-review`；`babysit-pr` | AI 审查只发 COMMENT；在当前 Codex 会话跟进 CI 和审查反馈，修复分支问题，并在仓库规则允许时启用自动合并。 |
-| 可选仓库引导 | 用户主动选择时使用 `setup-matt-pocock-skills` | 一次性配置更广泛的 Matt Pocock 工程约定；OpenSpec 不依赖它。 |
 
 ## 快速开始
 
@@ -91,7 +87,7 @@ $ai-workflow:ai-workflow 帮我澄清并规划当前项目的 CSV 导出功能�
 
 也可以单独调用已打包的依赖，例如 `$ai-workflow:grilling`、`$ai-workflow:openspec-propose`、`$ai-workflow:tdd`、`$ai-workflow:create-pull-request` 和 `$ai-workflow:babysit-pr`。主工作流会在对应阶段选择它们；只有想单独使用某个技能时，才需要直接调用。
 
-在 Codex 中输入 `/skills` 可浏览已安装技能目录，其中包括本 Plugin 打包的全部 21 个技能。也可以用 `$ai-workflow:<skill-name>` 直接调用插件内技能，例如 `$ai-workflow:openspec-propose`。`/ai workflow` 的自动补全会按匹配项筛选，不会枚举全部已打包技能。Codex 加载的是已安装的 Plugin 版本，不会直接读取仓库源代码目录中的 `skills/`。如果缺少某个已打包技能，请按下方命令更新 marketplace 并重装 Plugin，然后开启新对话。
+在 Codex 中输入 `/skills` 可浏览已安装技能目录，其中包括本 Plugin 打包的全部 19 个技能（2 个自有技能和 17 个固定依赖）。也可以用 `$ai-workflow:<skill-name>` 直接调用插件内技能，例如 `$ai-workflow:openspec-propose`。`/ai workflow` 的自动补全会按匹配项筛选，不会枚举全部已打包技能。Codex 加载的是已安装的 Plugin 版本，不会直接读取仓库源代码目录中的 `skills/`。如果缺少某个已打包技能，请按下方命令更新 marketplace 并重装 Plugin，然后开启新对话。
 
 ```mermaid
 flowchart LR
@@ -151,23 +147,22 @@ $ai-workflow:ai-workflow 从现有状态继续 CSV 导出变更。
 
 ## 安装了什么
 
-Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 19 个固定工作流依赖 skill。Codex 会通过 `ai-workflow` 命名空间发现当前已安装版本所包含的技能。OpenSpec CLI 是单独的 npm 全局可执行程序：完整流程通过 setup 在缺少时自动安装。技术栈专用技能按项目发现：
+Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 17 个固定工作流依赖 skill，共 19 个技能。Codex 会通过 `ai-workflow` 命名空间发现当前已安装版本所包含的技能。OpenSpec CLI 是单独的 npm 全局可执行程序：完整流程通过 setup 在缺少时自动安装。技术栈专用技能按项目发现：
 
 | 内容 | 位置与行为 |
 | --- | --- |
-| 主工作流和 19 个固定依赖技能 | Codex 管理的插件 `skills/` 目录，随 Plugin 更新 |
+| 主工作流和 17 个固定依赖技能 | Codex 管理的插件 `skills/` 目录，随 Plugin 更新 |
 | Setup skill 和 CLI | 插件安装目录；完整流程检查依赖，仅在缺少时全局安装 OpenSpec CLI |
 | 独立版 AI Workflow（另一安装方式） | 用户 `.agents/skills/ai-workflow`；Plugin 不会创建或替换它 |
 | OpenSpec CLI | npm 全局；保留已有 CLI |
 | OpenSpec 项目文件 | 使用 `openspec init --tools none` 初始化；项目的 `openspec/` 目录仍位于选定项目中，不再生成重复的 `openspec-*` skills |
 | 既有项目级 OpenSpec skills | 对早期初始化生成的副本予以保留；使用 `$ai-workflow:<skill-name>` 选择 Plugin 内副本 |
 | 技术栈专用技能 | 按当前项目发现；提案就绪且获准实施后安装到项目 `.agents/skills/` |
-| `setup-matt-pocock-skills` | 可选、由用户主动调用的一次性仓库引导；不是 OpenSpec 的前置条件 |
 | 安装器的托管记录 | 用户 `.ai-workflow/state.json`，与 skills CLI 的锁文件分开 |
 
-固定依赖包括：`grilling`、`find-skills`、`codebase-design`、`code-review`、`pr`；六个 OpenSpec skills；`tdd`、`diagnosing-bugs`、`research`、`domain-modeling`、`writing-for-agents`、`setup-matt-pocock-skills`；以及 `create-pull-request`、`babysit-pr`。源、版本/快照日期和许可证记录在 [dependencies.json](skills/ai-workflow/config/dependencies.json) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。刷新 Plugin 即可更新打包技能；独立安装版仍从各自上游更新。
+17 个固定依赖包括：`grilling`、`find-skills`、`codebase-design`、`code-review`；六个 OpenSpec skills；`tdd`、`diagnosing-bugs`、`research`、`domain-modeling`、`writing-for-agents`；以及 `create-pull-request`、`babysit-pr`。源、版本/快照日期和许可证记录在 [dependencies.json](skills/ai-workflow/config/dependencies.json) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。刷新 Plugin 即可更新打包技能；独立安装版仍从各自上游更新。
 
-完整流程默认使用 `pr` 起草 PR 文案；`create-pull-request` 只提交本任务文件、push 并创建 PR。`code-review` 的结果以 COMMENT 发布；APPROVE 或 REQUEST_CHANGES 需先询问用户。之后 `babysit-pr` 在当前 Codex 会话监控至合并或关闭，重试可能偶发的 CI 失败最多三次，修复并推送当前分支导致的问题；仅在仓库规则允许时启用自动合并。PR 合并后，若远端任务分支仍指向 PR head，则删除该分支；本地仅在安全时同步默认分支并删除任务分支，否则保留现场并报告。GitHub 前置条件不满足时完成本地工作并暂停发布。无 remote 时会先询问仓库名和可见性。`setup-matt-pocock-skills` 仍为可选引导，issue tracker 只管 backlog/triage，不替代 OpenSpec 的变更计划；其他条件技能只在触发条件匹配时启用。
+完整流程由 `ai-workflow` 根据已验证证据起草 PR 文案：有仓库模板时遵循模板，否则使用 Summary、Evidence、Merge Danger 三段；`create-pull-request` 只提交本任务文件、push 并创建 PR。`code-review` 的结果以 COMMENT 发布；APPROVE 或 REQUEST_CHANGES 需先询问用户。之后 `babysit-pr` 在当前 Codex 会话监控至合并或关闭，重试可能偶发的 CI 失败最多三次，修复并推送当前分支导致的问题；仅在仓库规则允许时启用自动合并。PR 合并后，若远端任务分支仍指向 PR head，则删除该分支；本地仅在安全时同步默认分支并删除任务分支，否则保留现场并报告。GitHub 前置条件不满足时完成本地工作并暂停发布。无 remote 时会先询问仓库名和可见性。其他条件技能只在触发条件匹配时启用。
 
 已有但不归本安装器托管的技能会被复用和保留，更新时也不会覆盖。目录存在不等于来源或兼容性已确认。安装器仅记录自己安装的依赖，并在更新托管内容前检查本地修改。
 
@@ -198,7 +193,7 @@ Windows 的项目参数可写成 `C:/work/my-project`。使用自定义 Codex �
 
 ```sh
 npx --yes --package=skills@1.7.4 skills update ai-workflow --global --yes
-npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review pr --global --yes
+npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review --global --yes
 ```
 
 `skills update` 会使用安装时记录的来源。对于手动安装且没有来源记录的 skill（例如 `grilling`），从原仓库重新添加即可更新：

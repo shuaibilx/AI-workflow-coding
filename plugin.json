@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "ai-workflow",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "A Codex development workflow with bundled skills, OpenSpec planning, implementation, and review.",
   "author": { "name": "shuaibilx" },
   "repository": "https://github.com/shuaibilx/AI-workflow-coding",

@@ -97,27 +97,24 @@ async function fixture(t, { failDownload = false, existingCli = true, activateCl
   return { root, home, packageRoot, project, run, calls, invoke };
 }
 
-test('the bundled manifest lists the fixed skills and each is vendored in the plugin', async (t) => {
+test('the standalone installer manifest lists its baseline skills and each is vendored in the plugin', async (t) => {
   const manifestPath = new URL('../skills/ai-workflow/config/dependencies.json', import.meta.url);
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-  const pr = manifest.skills.find((skill) => skill.name === 'pr');
-  assert.ok(pr, 'pr must be part of the standard dependency set');
-  assert.equal(pr.repository, 'mattpocock/skills');
-  assert.match(pr.ref, /^[a-f0-9]{40}$/);
+  assert.deepEqual(manifest.skills.map(({ name }) => name), [
+    'grilling', 'find-skills', 'codebase-design', 'code-review',
+  ]);
+  assert.equal(manifest.skills.some((skill) => skill.name === 'pr'), false, 'PR body guidance is part of the main workflow');
   for (const { name } of manifest.skills) {
     assert.match(await readFile(new URL(`../skills/${name}/SKILL.md`, import.meta.url), 'utf8'), /^---\nname:/);
   }
   assert.match(await readFile(new URL('../THIRD_PARTY_NOTICES.md', import.meta.url), 'utf8'), /Apache-2\.0|MIT/);
-  for (const name of ['tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents', 'setup-matt-pocock-skills']) {
+  for (const name of ['tdd', 'diagnosing-bugs', 'research', 'domain-modeling', 'writing-for-agents']) {
     assert.equal(manifest.skills.some((skill) => skill.name === name), false, `${name} must remain conditional`);
   }
 
   const f = await fixture(t, { skillDependencies: manifest.skills });
   await f.invoke();
-  const call = f.calls.find(({ args }) => args.includes('--skill') && args[args.indexOf('--skill') + 1] === 'pr');
-  assert.ok(call, 'the installer must fetch the declared PR skill');
-  assert.ok(call.args.includes('--global'));
-  assert.equal(call.args[call.args.indexOf('add') + 1], `https://github.com/${pr.repository}/tree/${pr.ref}`);
+  assert.equal(f.calls.some(({ args }) => args.includes('--skill') && args[args.indexOf('--skill') + 1] === 'pr'), false);
 });
 
 test('dry-run shows missing dependencies without creating user files or downloading', async (t) => {

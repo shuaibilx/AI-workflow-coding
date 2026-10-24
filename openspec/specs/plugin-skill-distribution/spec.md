@@ -36,6 +36,13 @@ Plugin-mode setup, installation, diagnostics, and updates SHALL use the packaged
 - **WHEN** a Plugin package lacks one of its declared bundled skills
 - **THEN** Plugin-mode setup reports an incomplete package and does not substitute a downloaded global skill
 
+### Requirement: Plugin exposes only workflow-owned skills
+The Plugin SHALL distribute the fixed skills used by its supported workflow phases without exposing unrelated optional convention setup or standalone helpers whose behavior is owned by the main workflow.
+
+#### Scenario: User browses the Plugin skill catalog
+- **WHEN** the Plugin package is built
+- **THEN** its catalog omits the optional `setup-matt-pocock-skills` and standalone `pr` body-writing skills while retaining `create-pull-request` and `babysit-pr`
+
 ### Requirement: OpenSpec CLI remains an executable prerequisite
 The Plugin SHALL provide the pinned OpenSpec CLI globally before a full OpenSpec-backed workflow proceeds, while project initialization SHALL create OpenSpec data in the selected project without generating duplicate project-local OpenSpec skills.
 

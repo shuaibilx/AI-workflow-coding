@@ -1,6 +1,6 @@
 # Skill + CLI architecture
 
-AI Workflow Plugin uses two cooperating layers: skills guide Codex through development choices; a small CLI makes setup and project initialization repeatable. OpenSpec remains responsible for change artifacts and task progress. All 19 fixed workflow skills ship inside the Plugin; stack-specific skills remain project-discovered.
+AI Workflow Plugin uses two cooperating layers: skills guide Codex through development choices; a small CLI makes setup and project initialization repeatable. OpenSpec remains responsible for change artifacts and task progress. The Plugin ships two first-party skills and 17 fixed dependency skills; stack-specific skills remain project-discovered.
 
 ## Layout
 
@@ -18,7 +18,7 @@ AI-workflow-coding/
 │   │   ├── scripts/                  CLI, installer, subprocess adapter
 │   │   └── agents/openai.yaml        Codex UI metadata
 │   ├── ai-workflow-setup/            Full-workflow preflight skill
-│   ├── <19 bundled dependency skills>/ Fixed upstream skills and their resources
+│   ├── <17 bundled dependency skills>/ Fixed upstream skills and their resources
 ├── licenses/                         Upstream MIT and Apache-2.0 texts
 └── THIRD_PARTY_NOTICES.md            Sources, revisions/snapshots, and license mapping
 ```
@@ -31,7 +31,7 @@ The same skill directories serve Plugin and standalone skill distribution; the n
 | --- | --- | --- |
 | `ai-workflow` | Task-size routing, requirements, design, skill selection, phase handoffs, review, delivery | Fixed workflow skills and OpenSpec |
 | `ai-workflow-setup` | Local readiness and delivery-prerequisite preflight | `setup --plugin --json`; missing OpenSpec CLI install |
-| Fixed bundled skills | Clarification, skill discovery, OpenSpec phases, conditional engineering, local review, PR authoring and GitHub operations | Loaded by Codex from Plugin `skills/` |
+| Fixed bundled skills | Clarification, skill discovery, OpenSpec phases, conditional engineering, local review, and GitHub operations | Loaded by Codex from Plugin `skills/` |
 | AI Workflow CLI | Package completeness, OpenSpec CLI readiness, standalone dependency install/update, explicit project init | npm, skills CLI, Git, `gh`, OpenSpec |
 | OpenSpec | Change artifacts, task state, spec synchronization and archive | Global CLI; project data lives under the selected project |
 | Stack-specific skills | Project technology guidance | Found with `find-skills`, selected after review |
@@ -49,7 +49,7 @@ The setup CLI distinguishes local readiness (`ok`) from remote delivery readines
 | `update --plugin` | Update only an OpenSpec installation previously managed by this installer |
 | `init --project <directory>` | Initialize only the named project using `openspec init --tools none`; create project OpenSpec data without generating duplicate project-local skills |
 
-Without `--plugin`, the standalone installer retains its separate contract: install/update the main skill, five global baseline dependencies, and a missing OpenSpec CLI. It does not claim to install the Plugin's entire runtime dependency set globally.
+Without `--plugin`, the standalone installer retains its separate contract: install/update the main skill, four global baseline dependencies, and a missing OpenSpec CLI. It does not claim to install the Plugin's entire runtime dependency set globally.
 
 The `pluginSkills` array in `skills/ai-workflow/config/dependencies.json` is the source of truth for Plugin completeness. `skills` remains the smaller standalone install set. All fixed skill names, upstream sources, immutable revisions or dated snapshots, and licenses are reviewed in tests and third-party notices.
 
