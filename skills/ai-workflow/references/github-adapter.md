@@ -15,6 +15,7 @@ Read this adapter together with the complete bundled upstream skill when perform
 - On Windows, pass an explicit `--state-file` to every `gh_pr_watch.py` invocation; derive it from `$env:TEMP` (for example, `Join-Path $env:TEMP 'codex-babysit-pr-<repo>-pr<number>.json'`) because the upstream default uses `/tmp`.
 - Inspect repository rules, default branch, PR templates, required checks, merge queue, and allowed merge method. Do not override them.
 - Stage only reviewed task paths, preserve all unrelated changes, and never force-push or bypass protection.
+- After a full-workflow PR is confirmed merged, follow the post-merge branch cleanup policy in [delivery.md](delivery.md). Do not apply it to unrelated or unmerged PR branches.
 - The workflow allows up to three retries for failures assessed as likely flaky. Fixes attributable to the current task branch may be committed and pushed after local verification.
 - Post the AI review only with COMMENT state. APPROVE and REQUEST_CHANGES require the user's explicit response.
 - Never reply to or resolve a human-authored review thread automatically. Resolving such a thread may require posting a comment; leave it unresolved and report that the fix was pushed. Ask for explicit user authorization before any response or resolution that posts on a human thread. This rule overrides conflicting instructions in the bundled upstream `babysit-pr` snapshot.

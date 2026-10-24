@@ -91,7 +91,7 @@ $ai-workflow:ai-workflow 帮我澄清并规划当前项目的 CSV 导出功能�
 
 也可以单独调用已打包的依赖，例如 `$ai-workflow:grilling`、`$ai-workflow:openspec-propose`、`$ai-workflow:tdd`、`$ai-workflow:create-pull-request` 和 `$ai-workflow:babysit-pr`。主工作流会在对应阶段选择它们；只有想单独使用某个技能时，才需要直接调用。
 
-在 Codex 中输入 `/skills` 可浏览当前已安装的技能，也可以用 `$ai-workflow:<skill-name>` 直接调用插件内技能，例如 `$ai-workflow:openspec-propose`。输入 `/ai workflow` 会匹配相关工作流入口，但不会列出全部技能。Codex 加载的是已安装的 Plugin 版本，不会直接读取仓库源代码目录中的 `skills/`。如果缺少某个已打包技能，请按下方命令更新 marketplace 并重装 Plugin，然后开启新对话。
+在 Codex 中输入 `/skills` 可浏览已安装技能目录，其中包括本 Plugin 打包的全部 21 个技能。也可以用 `$ai-workflow:<skill-name>` 直接调用插件内技能，例如 `$ai-workflow:openspec-propose`。`/ai workflow` 的自动补全会按匹配项筛选，不会枚举全部已打包技能。Codex 加载的是已安装的 Plugin 版本，不会直接读取仓库源代码目录中的 `skills/`。如果缺少某个已打包技能，请按下方命令更新 marketplace 并重装 Plugin，然后开启新对话。
 
 ```mermaid
 flowchart LR
@@ -99,11 +99,11 @@ flowchart LR
     W -->|完整流程| C["自动运行 ai-workflow-setup<br/>CLI：setup --plugin<br/>检查 bundle、OpenSpec、Git、gh/认证"]
     C --> B["创建/复用任务分支<br/><b>create-pull-request</b>"]
     B --> S["按阶段使用已打包 skills<br/><b>grilling · OpenSpec · TDD · review · GitHub</b>"]
-    S --> D["验证、创建 PR、发 COMMENT 审查，<br/>监控并按仓库规则自动合并"]
+    S --> D["验证、创建 PR、发 COMMENT 审查，<br/>按仓库规则监控/自动合并，<br/>合并后清理任务分支"]
     W -->|小修复| F["直接实施与审查<br/>不强制 setup 或自动发布"]
 ```
 
-完整流程会自动运行 `setup --plugin`：检查已打包技能并区分本地就绪与 GitHub 发布就绪；缺少 OpenSpec 时只全局安装固定版本的 CLI。它不会下载已打包的 skills 或初始化项目。缺少 Git/`gh`/认证时可继续本地工作，但会暂停 GitHub 发布；小修复跳过 setup 和自动发布。目录编排及借鉴 OpenSpec 的职责划分见 [Skill + CLI 架构说明](docs/architecture.md)。
+完整流程会自动运行 `setup --plugin`：检查已打包技能并区分本地就绪与 GitHub 发布就绪；缺少 OpenSpec 时只全局安装固定版本的 CLI。它不会下载已打包的 skills 或初始化项目。PR 确认合并后，工作流会在远端任务分支仍指向该 PR 时删除它；只有本地工作区干净且可安全快进时，才同步默认分支并删除本地任务分支，否则保留现场并说明原因。缺少 Git/`gh`/认证时可继续本地工作，但会暂停 GitHub 发布；小修复跳过 setup 和自动发布。目录编排及借鉴 OpenSpec 的职责划分见 [Skill + CLI 架构说明](docs/architecture.md)。
 
 ### 也支持独立 skill 安装
 
@@ -167,7 +167,7 @@ Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 19 �
 
 固定依赖包括：`grilling`、`find-skills`、`codebase-design`、`code-review`、`pr`；六个 OpenSpec skills；`tdd`、`diagnosing-bugs`、`research`、`domain-modeling`、`writing-for-agents`、`setup-matt-pocock-skills`；以及 `create-pull-request`、`babysit-pr`。源、版本/快照日期和许可证记录在 [dependencies.json](skills/ai-workflow/config/dependencies.json) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。刷新 Plugin 即可更新打包技能；独立安装版仍从各自上游更新。
 
-完整流程默认使用 `pr` 起草 PR 文案；`create-pull-request` 只提交本任务文件、push 并创建 PR。`code-review` 的结果以 COMMENT 发布；APPROVE 或 REQUEST_CHANGES 需先询问用户。之后 `babysit-pr` 在当前 Codex 会话监控至合并或关闭，重试可能偶发的 CI 失败最多三次，修复并推送当前分支导致的问题；仅在仓库规则允许时启用自动合并。GitHub 前置条件不满足时完成本地工作并暂停发布。无 remote 时会先询问仓库名和可见性。`setup-matt-pocock-skills` 仍为可选引导，issue tracker 只管 backlog/triage，不替代 OpenSpec 的变更计划；其他条件技能只在触发条件匹配时启用。
+完整流程默认使用 `pr` 起草 PR 文案；`create-pull-request` 只提交本任务文件、push 并创建 PR。`code-review` 的结果以 COMMENT 发布；APPROVE 或 REQUEST_CHANGES 需先询问用户。之后 `babysit-pr` 在当前 Codex 会话监控至合并或关闭，重试可能偶发的 CI 失败最多三次，修复并推送当前分支导致的问题；仅在仓库规则允许时启用自动合并。PR 合并后，若远端任务分支仍指向 PR head，则删除该分支；本地仅在安全时同步默认分支并删除任务分支，否则保留现场并报告。GitHub 前置条件不满足时完成本地工作并暂停发布。无 remote 时会先询问仓库名和可见性。`setup-matt-pocock-skills` 仍为可选引导，issue tracker 只管 backlog/triage，不替代 OpenSpec 的变更计划；其他条件技能只在触发条件匹配时启用。
 
 已有但不归本安装器托管的技能会被复用和保留，更新时也不会覆盖。目录存在不等于来源或兼容性已确认。安装器仅记录自己安装的依赖，并在更新托管内容前检查本地修改。
 

@@ -17,15 +17,27 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.equal(compatibility.name, portable.name);
   assert.equal(compatibility.version, portable.version);
   assert.equal(portable.version, pkg.version);
-  assert.equal(pkg.version, '0.5.0');
+  assert.equal(pkg.version, '0.5.1');
   assert.deepEqual(compatibility.interface, portable.extensions['com.openai'].interface);
   const entry = marketplace.plugins.find(({ name }) => name === portable.name);
   assert.ok(entry, 'the plugin must be addressable from its marketplace');
   assert.equal(fileURLToPath(new URL(entry.source.path, new URL('../', import.meta.url))), repo);
   assert.equal(portable.extensions['com.openai'].onboardingSkill, 'ai-workflow-setup');
   assert.equal(compatibility.extensions['com.openai'].onboardingSkill, 'ai-workflow-setup');
+  const readme = await readFile(join(repo, 'README.md'), 'utf8');
+  const readmeZh = await readFile(join(repo, 'README.zh-CN.md'), 'utf8');
+  assert.ok(readme.includes('/skills'), 'English README must explain how to browse installed skills');
+  assert.ok(readme.includes('$ai-workflow:<skill-name>'), 'English README must explain direct skill invocation');
+  assert.ok(readme.includes('all 21 skills bundled'), 'English README must distinguish autocomplete from the full catalog');
+  assert.ok(readmeZh.includes('/skills'), 'Chinese README must explain how to browse installed skills');
+  assert.ok(readmeZh.includes('$ai-workflow:<skill-name>'), 'Chinese README must explain direct skill invocation');
+  assert.ok(readmeZh.includes('全部 21 个技能'), 'Chinese README must distinguish autocomplete from the full catalog');
+  assert.match(readme, /autocomplete is filtered/i);
+  assert.match(readmeZh, /自动补全会按匹配项筛选/);
   const packed = JSON.parse((await runCommand('npm', ['pack', '--dry-run', '--json'], { cwd: repo })).stdout)[0];
   const paths = new Set(packed.files.map(({ path }) => path));
+  assert.equal([...paths].some((path) => path.startsWith('.agents/skills/openspec-')), false,
+    'generated project-local OpenSpec copies must not be included in the Plugin artifact');
   for (const path of ['plugin.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json',
     'THIRD_PARTY_NOTICES.md', 'licenses/MIT-mattpocock-skills.txt', 'licenses/MIT-vercel-labs-skills.txt',
     'licenses/Apache-2.0-humanlayer.txt', 'licenses/Apache-2.0-cline.txt', 'licenses/Apache-2.0-openai-codex.txt',
