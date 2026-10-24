@@ -68,6 +68,8 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    Use the configured default schema unless the user explicitly requests a different workflow.
 
+   Write change artifacts in the language used by the user in the current request unless they explicitly request another language or the project context sets a language. Keep schema-required headings and keywords, artifact identifiers, code, API names, and CLI commands in their required or original form. Apply this rule to the artifact content without translating structural tokens expected by OpenSpec.
+
    **Use a different schema only if the user:**
    - Explicitly requests a specific schema by name → use `--schema <schema-name>`
    - Asks to "show workflows" or asks "what workflows" exist → resolve the authoritative root by running `openspec context --json` from the current working directory. If the user explicitly selected a registered store, use `openspec context --json --store "<store-id>"`. Then run `openspec schemas --json` with its working directory set to the returned `root.path` and let them choose. This preserves roots selected by a local `store:` pointer or the global `defaultStore`; when a registered store was explicitly selected, append `--store "<store-id>"` to `openspec schemas --json` as well. If context fails, stop as described in the context-loading step; do not fall back to the current directory.

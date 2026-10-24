@@ -28,6 +28,8 @@ This workflow makes those handoffs explicit:
 
 OpenSpec supplies the change/spec machinery. AI Workflow coordinates it with complementary skills. It is an independent project, initially targeting Codex.
 
+OpenSpec artifact content follows the language of the current user request by default, while required schema headings, keywords, and technical identifiers retain their expected form. After all apply tasks are complete, the workflow automatically verifies and reviews the change, syncs applicable delta specs, and archives it; a failed check, unresolved finding, or sync mismatch leaves the change active.
+
 ## See the workflow
 
 ```mermaid
@@ -38,7 +40,7 @@ flowchart LR
     B --> C["1. Clarify<br/><span style='color:#174ea6'><b>grilling</b></span> · requirements<br/><span style='color:#174ea6'><b>Plan mode</b></span> · complex work<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · unresolved facts"]:::stage
     C --> P["2. Plan + propose<br/><span style='color:#174ea6'><b>find-skills</b></span> · stack skill discovery<br/><span style='color:#174ea6'><b>research</b></span> · uncertain external facts<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · lasting terms/decisions<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · decisions + tasks"]:::stage
     P -->|User requests implementation| I["3. Implement<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · tasks<br/><span style='color:#174ea6'><b>tdd</b></span> · agreed test seams<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · hard bugs/perf regressions<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · agent docs only"]:::stage
-    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · template or fallback PR body"]:::stage
+    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · automatically after all gates pass<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · template or fallback PR body"]:::stage
     G -->|Small fix| I
     V -->|Fix and recheck| I
     V -->|Full workflow| D["5. Deliver<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · task-only commit/push + PR<br/>COMMENT-only AI review"]:::stage
@@ -58,7 +60,7 @@ Plan mode is an optional Codex aid for complex, risky, or underspecified work; i
 | Clarify | `grilling`; Codex Plan mode (optional); `openspec-explore` (when unknowns remain) | Clarify scope and acceptance; reason through complex paths; investigate unresolved repository facts or feasibility. |
 | Plan and propose | `find-skills`; `research` and `domain-modeling` (when triggered); `codebase-design`; `openspec-propose` | Assess candidates before the proposal; capture cited research, durable domain language, test seams, decisions, and tasks where relevant. |
 | Implement | `openspec-apply-change`; `tdd` or `diagnosing-bugs` (when triggered); `writing-for-agents` (agent docs only); `codebase-design` | Execute tasks with confirmed test seams, a disciplined bug loop, or agent-document guidance as appropriate. |
-| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change`; `ai-workflow` | Verify behavior, review standards and spec locally, fix and recheck findings, sync/archive full changes, then draft PR text from the repository template or documented fallback. |
+| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change`; `ai-workflow` | When apply tasks finish, automatically verify behavior, review standards and spec, fix and recheck findings, sync/archive only after all gates pass, then draft PR text from the repository template or documented fallback. |
 | Full-workflow delivery | `create-pull-request` | Commit only reviewed task files, push, and create a PR after the full workflow passes local checks/review. |
 | PR review and monitoring | `code-review`; `babysit-pr` | Post AI findings as COMMENT only; monitor CI and review feedback in the current Codex session, fix branch-caused issues, and enable repo-rule auto-merge when eligible. |
 
@@ -155,7 +157,7 @@ The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) 
 | Setup skill and CLI | Plugin installation; full workflows check prerequisites and install only a missing OpenSpec CLI |
 | Standalone AI Workflow (alternative install) | User `.agents/skills/ai-workflow`; Plugin setup does not create or replace it |
 | OpenSpec CLI | npm global; an existing CLI is preserved |
-| OpenSpec project files | Initialized with `openspec init --tools none`; the project's `openspec/` directory remains under the selected project, without generating duplicate `openspec-*` skills |
+| OpenSpec project files | Initialized with `openspec init --tools none`; the selected project's `openspec/` directory receives adaptive request-language context only when its local config has no `context`; existing context and external stores are preserved |
 | Existing project-local OpenSpec skills | Preserved when a project was initialized earlier; select Plugin copies with `$ai-workflow:<skill-name>` |
 | Stack-specific skills | Discovered for the selected project and installed to its `.agents/skills/` only when the proposal is ready and implementation is authorized |
 | Installer ownership record | User `.ai-workflow/state.json`; separate from the skills CLI's own lock |

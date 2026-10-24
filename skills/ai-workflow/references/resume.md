@@ -14,7 +14,7 @@ Recover the existing state before choosing a phase. A request to continue is not
 | Proposal presented; implementation not authorized | Remain at the proposal handoff |
 | Current user explicitly asks to apply an approved proposal | Enter implementation; do not re-propose |
 | Tasks incomplete | Continue apply using current instructions |
-| Tasks complete but checks/review absent | Verify and review; do not archive yet |
+| Tasks complete but checks/review absent | Resume apply; its `all_done` path runs verification, review, sync, and archive automatically |
 | Fixes after review | Recheck affected behavior and findings |
 | Sync conflict or failed check | Resolve the blocker within scope; keep change active |
 | Already archived | Confirm delivery, or start a separately scoped follow-up if requested |

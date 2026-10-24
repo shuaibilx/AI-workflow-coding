@@ -17,7 +17,7 @@ update     Update standalone managed skills, or Plugin-managed OpenSpec CLI.
 --latest   Resolve upstream HEAD/registry versions explicitly; compatibility is unverified.
 --plugin   Use bundled Plugin skills; never download them or copy/update standalone skills.
 --json     Return structured results (or an error) and diagnostic messages for any command.
-init       Initialize OpenSpec only in the explicitly named project.
+init       Initialize OpenSpec in the named project and add adaptive artifact-language context when absent.
 
 Plugin installs include all fixed workflow skills. OpenSpec CLI remains a global executable.
 Setup checks GitHub delivery readiness separately; the installer never initializes Git or publishes changes.

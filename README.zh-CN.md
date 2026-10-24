@@ -28,6 +28,8 @@ AI Workflow Plugin 为 Codex 提供从需求澄清、技术选型、技能发现
 
 OpenSpec 提供变更和规范管理机制，AI Workflow 负责将它与其他技能衔接起来。本项目为独立项目，第一版面向 Codex。
 
+OpenSpec 工件默认跟随用户当前请求的语言，同时保留 schema 要求的标题、关键词和技术标识符。apply 中的任务全部完成后，工作流会自动验证、审查变更，同步适用的 delta spec 并归档；检查失败、审查问题未解决或同步不匹配时，变更会保持 active。
+
 ## 看一遍完整流程
 
 ```mermaid
@@ -38,7 +40,7 @@ flowchart LR
     B --> C["1. 澄清<br/><span style='color:#174ea6'><b>grilling</b></span> · 需求与验收<br/><span style='color:#174ea6'><b>Plan mode</b></span> · 复杂任务<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · 未决事实"]:::stage
     C --> P["2. 规划与提案<br/><span style='color:#174ea6'><b>find-skills</b></span> · 技术栈技能发现<br/><span style='color:#174ea6'><b>research</b></span> · 未确定的外部事实<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · 长期术语/决策<br/><span style='color:#174ea6'><b>codebase-design</b></span> · 模块接口<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · 决策与任务"]:::stage
     P -->|用户要求实施| I["3. 实施<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · 任务<br/><span style='color:#174ea6'><b>tdd</b></span> · 已确认的测试 seam<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · 难复现 Bug/性能回退<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · 仅 agent 文档"]:::stage
-    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>sync + archive</b></span> · 完整变更<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · 模板或默认格式的 PR 文案"]:::stage
+    I --> V["4. 验证与收尾<br/>检查 · 行为<br/><span style='color:#174ea6'><b>code-review</b></span> · 规范与需求<br/><span style='color:#174ea6'><b>自动 sync + archive</b></span> · 全部门槛通过后<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · 模板或默认格式的 PR 文案"]:::stage
     G -->|小修复| I
     V -->|修复并复查| I
     V -->|完整流程| D["5. GitHub 交付<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · 仅提交任务改动并 push、建 PR<br/>AI 审查只发 COMMENT"]:::stage
@@ -58,7 +60,7 @@ Plan mode 是 Codex 的可选辅助模式，适用于复杂、有风险或需求
 | 澄清 | `grilling`；Codex Plan mode（可选）；仍有未知时用 `openspec-explore` | 明确范围与验收；复杂任务时推演实现路径；调查尚未解决的代码库事实或可行性。 |
 | 规划与提案 | `find-skills`；按需 `research`、`domain-modeling`；`codebase-design`；`openspec-propose` | 定稿前评估候选技能；需要时记录带引用的研究、长期领域术语和测试 seam，再生成唯一正式提案和任务计划。 |
 | 实施 | `openspec-apply-change`；按需 `tdd`、`diagnosing-bugs`；仅编辑 agent 文档时用 `writing-for-agents` | 结合已确认的测试 seam、系统化 Bug 复现或 agent 文档规范完成任务。 |
-| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change`；`ai-workflow` | 验证行为，在本地审查规范与需求，修复并复查问题，同步并归档完整变更，然后按仓库模板或默认格式起草 PR 文案。 |
+| 验证与收尾 | 检查；`code-review`；`openspec-sync-specs`；`openspec-archive-change`；`ai-workflow` | apply 任务完成后自动验证行为、审查规范与需求、修复并复查问题；所有门槛通过后同步并归档，再按仓库模板或默认格式起草 PR 文案。 |
 | 完整流程 GitHub 交付 | `create-pull-request` | 检查和审查通过后，仅提交任务文件、push 并创建 PR。 |
 | PR 审查与监控 | `code-review`；`babysit-pr` | AI 审查只发 COMMENT；在当前 Codex 会话跟进 CI 和审查反馈，修复分支问题，并在仓库规则允许时启用自动合并。 |
 
@@ -155,7 +157,7 @@ Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 17 �
 | Setup skill 和 CLI | 插件安装目录；完整流程检查依赖，仅在缺少时全局安装 OpenSpec CLI |
 | 独立版 AI Workflow（另一安装方式） | 用户 `.agents/skills/ai-workflow`；Plugin 不会创建或替换它 |
 | OpenSpec CLI | npm 全局；保留已有 CLI |
-| OpenSpec 项目文件 | 使用 `openspec init --tools none` 初始化；项目的 `openspec/` 目录仍位于选定项目中，不再生成重复的 `openspec-*` skills |
+| OpenSpec 项目文件 | 使用 `openspec init --tools none` 初始化；只在选定项目本地配置缺少 `context` 时补充自适应语言规则；保留已有 context 和外部 store |
 | 既有项目级 OpenSpec skills | 对早期初始化生成的副本予以保留；使用 `$ai-workflow:<skill-name>` 选择 Plugin 内副本 |
 | 技术栈专用技能 | 按当前项目发现；提案就绪且获准实施后安装到项目 `.agents/skills/` |
 | 安装器的托管记录 | 用户 `.ai-workflow/state.json`，与 skills CLI 的锁文件分开 |

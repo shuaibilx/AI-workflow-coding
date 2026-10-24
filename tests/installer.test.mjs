@@ -381,7 +381,10 @@ test('init requires an explicit project and initializes only that directory with
   const f = await fixture(t);
   await assert.rejects(f.invoke({ command: 'init' }), /project/);
   await f.invoke({ command: 'init', project: f.project });
-  assert.equal(await readFile(join(f.project, 'openspec', 'config.yaml'), 'utf8'), 'schema: spec-driven\n');
+  const config = await readFile(join(f.project, 'openspec', 'config.yaml'), 'utf8');
+  assert.match(config, /^schema: spec-driven\n/);
+  assert.match(config, /context: \|\n  OpenSpec change artifacts follow the language used by the user in the current request/);
+  assert.match(config, /Keep schema-required headings and keywords, identifiers, code, API names, and CLI commands/);
   for (const name of OPEN_SPEC_SKILLS) {
     await assert.rejects(access(join(f.project, '.agents', 'skills', name, 'SKILL.md')));
   }
@@ -390,6 +393,77 @@ test('init requires an explicit project and initializes only that directory with
   f.calls.length = 0;
   await f.invoke({ command: 'init', project: f.project });
   assert.equal(f.calls.some((call) => call.args[0] === 'init'), false);
+});
+
+test('init adds adaptive language context to an existing project without replacing its other settings', async (t) => {
+  const f = await fixture(t);
+  const configPath = join(f.project, 'openspec', 'config.yaml');
+  await mkdir(join(f.project, 'openspec'), { recursive: true });
+  await writeFile(configPath, 'schema: spec-driven\nrules:\n  proposal:\n    - Keep proposals concise\n');
+
+  const first = await f.invoke({ command: 'init', project: f.project });
+  const configured = await readFile(configPath, 'utf8');
+  assert.match(configured, /^schema: spec-driven\nrules:\n  proposal:\n    - Keep proposals concise\n/);
+  assert.match(configured, /context: \|\n  OpenSpec change artifacts follow the language used by the user in the current request/);
+  assert.equal(first.items.find(({ name }) => name === 'openspec-project').action, 'configure');
+  assert.equal(f.calls.some((call) => call.args[0] === 'init'), false, 'existing projects are not reinitialized');
+
+  f.calls.length = 0;
+  const second = await f.invoke({ command: 'init', project: f.project });
+  assert.equal(await readFile(configPath, 'utf8'), configured, 'repeated initialization is idempotent');
+  assert.equal(second.items.find(({ name }) => name === 'openspec-project').action, 'skip');
+  assert.equal(f.calls.some((call) => call.args[0] === 'init'), false);
+});
+
+test('init preserves an existing custom context byte-for-byte', async (t) => {
+  const f = await fixture(t);
+  const configPath = join(f.project, 'openspec', 'config.yaml');
+  const original = 'schema: spec-driven\ncontext: |\n  Keep our existing project rules.\nrules:\n  tasks:\n    - Keep tasks small\n';
+  await mkdir(join(f.project, 'openspec'), { recursive: true });
+  await writeFile(configPath, original);
+
+  await f.invoke({ command: 'init', project: f.project });
+
+  assert.equal(await readFile(configPath, 'utf8'), original);
+});
+
+test('init does not add project config when OpenSpec resolves to an external store', async (t) => {
+  const f = await fixture(t);
+  const externalStore = join(f.root, 'external-store');
+  await mkdir(externalStore, { recursive: true });
+  const result = await execute({ command: 'init', project: f.project }, {
+    log: () => {},
+    run: async (tool, args) => {
+      if (tool === 'openspec' && args[0] === 'list') {
+        return { code: 0, stdout: JSON.stringify({ root: { path: externalStore, source: 'store' }, changes: [] }) };
+      }
+      return f.run(tool, args);
+    },
+  });
+
+  assert.equal(result.items.find(({ name }) => name === 'openspec-project').action, 'skip');
+  await assert.rejects(access(join(f.project, 'openspec')));
+  await assert.rejects(access(join(externalStore, 'openspec')));
+});
+
+test('init skips configuration changes when OpenSpec identifies the selected root as a store', async (t) => {
+  const f = await fixture(t);
+  const configPath = join(f.project, 'openspec', 'config.yaml');
+  await mkdir(join(f.project, 'openspec'), { recursive: true });
+  const original = 'schema: spec-driven\n';
+  await writeFile(configPath, original);
+  const result = await execute({ command: 'init', project: f.project }, {
+    log: () => {},
+    run: async (tool, args) => {
+      if (tool === 'openspec' && args[0] === 'list') {
+        return { code: 0, stdout: JSON.stringify({ root: { path: f.project, source: 'store' }, changes: [] }) };
+      }
+      return f.run(tool, args);
+    },
+  });
+
+  assert.equal(result.items.find(({ name }) => name === 'openspec-project').action, 'skip');
+  assert.equal(await readFile(configPath, 'utf8'), original);
 });
 
 test('plugin setup keeps local readiness when GitHub is unauthenticated and reports delivery separately', async (t) => {

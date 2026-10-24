@@ -12,6 +12,8 @@ metadata:
 
 Archive a completed change in the experimental workflow.
 
+**Verified apply closure:** When invoked by `openspec-apply-change` with the handoff text “verified apply closure: all tracked tasks complete; verification and Standards/Spec review passed; user authorized automatic delta sync and archive”, use the automatic closure route. Do not ask for the normal artifact/task confirmation or spec-sync choice: incomplete required artifacts or tasks, a sync blocker, a failed sync, or a mismatch must stop the closure and leave the change active; otherwise sync and verify any required delta specs, then archive. If no delta sync is needed, archive after the remaining checks pass. Without this explicit handoff, keep the normal interactive behavior below.
+
 **Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
 
 **Project check:** These steps expect a project that already uses OpenSpec. Before the first step that writes anything (`new change`, `archive`, `sync specs`, or authoring an artifact file), confirm the project has a root: run `openspec list --json` (with `--store <id>` when a store is selected, since the store is then the root) and read `root`. A root object means the project is set up. `"root": null` means it is not - there is no `openspec/` directory here, and a write such as `openspec new change` would create one as a side effect. The command also exits non-zero, which is that answer rather than a broken CLI, so read the JSON instead of retrying or working around it.
@@ -84,6 +86,8 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
+   In verified apply closure mode, stop and leave the change active instead of asking to proceed.
+
 3. **Check task completion status**
 
    Run `openspec list --json` with the same selected-root flags and find the
@@ -106,6 +110,8 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
+   In verified apply closure mode, stop and leave the change active instead of asking to proceed.
+
    **If `totalTasks` is zero:** Proceed without a task-related warning.
 
 4. **Assess delta spec sync state**
@@ -123,14 +129,16 @@ In both branches, never create the root as a side effect: do not run `openspec i
      - Otherwise, if the delta has no ADDED requirements, report that no sync is possible and mark that capability as sync-blocked. For a REMOVED-only delta, warn that there is no main spec to remove from and leave the main-spec tree unchanged. `openspec archive` refuses the unmarked REMOVED-only case with `Spec must have at least one requirement`.
      - Otherwise, count the capability as needing sync and name it in the summary (`<capability-path>: new main spec will be created`). If the delta also has REMOVED requirements, warn that they will be ignored because there is no main spec to remove from. The sync creates the main spec from only the delta's ADDED requirements, exactly as `openspec archive` does.
    - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Continue assessing the remaining capabilities even when one is sync-blocked. Show a combined summary before prompting.
+   - Continue assessing the remaining capabilities even when one is sync-blocked. Show a combined summary before prompting or automatically selecting the closure action.
 
-   **Prompt options:**
+   **Prompt options (standalone archive only):**
    - If any capability is sync-blocked: explain why and offer only "Archive without syncing", "Cancel"
    - Otherwise, if changes needed: "Sync now (recommended)", "Archive without syncing"
    - Otherwise, if already synced: "Archive now", "Sync anyway", "Cancel"
 
-   Route on the answer:
+   In verified apply closure mode, choose automatically: sync now when any delta needs synchronization, archive now when all deltas are already synced or no delta specs exist, and stop without archiving if any capability is sync-blocked. Do not offer “Archive without syncing” in this mode; the user authorized the normal sync-and-archive closure.
+
+   Route on the answer for a standalone archive:
    - "Cancel" — stop, do not archive
    - "Archive without syncing" or "Archive now" — proceed to archive
    - "Sync now" or "Sync anyway" — sync, then verify (below). Do not start any sync while a capability is sync-blocked; explain the blocker and repeat the available choices.
@@ -208,7 +216,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 **Guardrails**
 - Announce the selected change; prompt for selection when it is ambiguous
 - Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
+- In standalone mode, don't block archive on warnings - inform and confirm; in verified apply closure mode, incomplete required artifacts or tasks block archive
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
 - If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)

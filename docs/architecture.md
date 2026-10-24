@@ -36,7 +36,7 @@ The same skill directories serve Plugin and standalone skill distribution; the n
 | OpenSpec | Change artifacts, task state, spec synchronization and archive | Global CLI; project data lives under the selected project |
 | Stack-specific skills | Project technology guidance | Found with `find-skills`, selected after review |
 
-The setup CLI distinguishes local readiness (`ok`) from remote delivery readiness (`deliveryReady`). It installs only the pinned OpenSpec CLI if missing. It never installs Git/`gh`, copies Plugin skills to global paths, or removes project-local skills created by earlier OpenSpec initialization. New project initialization uses `--tools none` and leaves OpenSpec skills to the Plugin bundle.
+The setup CLI distinguishes local readiness (`ok`) from remote delivery readiness (`deliveryReady`). It installs only the pinned OpenSpec CLI if missing. It never installs Git/`gh`, copies Plugin skills to global paths, or removes project-local skills created by earlier OpenSpec initialization. New project initialization uses `--tools none` and leaves OpenSpec skills to the Plugin bundle. The explicit `init` command adds adaptive request-language context to a project-local config only when it has no existing `context`, preserving existing context and external stores.
 
 ## CLI contract
 
@@ -47,7 +47,7 @@ The setup CLI distinguishes local readiness (`ok`) from remote delivery readines
 | `install --plugin --dry-run --json` | Preview OpenSpec CLI installation; never download bundled skills |
 | `install --plugin` | Install only the missing OpenSpec CLI |
 | `update --plugin` | Update only an OpenSpec installation previously managed by this installer |
-| `init --project <directory>` | Initialize only the named project using `openspec init --tools none`; create project OpenSpec data without generating duplicate project-local skills |
+| `init --project <directory>` | Initialize only the named project using `openspec init --tools none`; add adaptive artifact-language context when absent without generating duplicate project-local skills or changing external stores |
 
 Without `--plugin`, the standalone installer retains its separate contract: install/update the main skill, four global baseline dependencies, and a missing OpenSpec CLI. It does not claim to install the Plugin's entire runtime dependency set globally.
 

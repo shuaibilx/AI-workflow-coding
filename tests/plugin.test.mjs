@@ -17,7 +17,7 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.equal(compatibility.name, portable.name);
   assert.equal(compatibility.version, portable.version);
   assert.equal(portable.version, pkg.version);
-  assert.equal(pkg.version, '0.6.0');
+  assert.equal(pkg.version, '0.7.0');
   assert.deepEqual(compatibility.interface, portable.extensions['com.openai'].interface);
   const entry = marketplace.plugins.find(({ name }) => name === portable.name);
   assert.ok(entry, 'the plugin must be addressable from its marketplace');
@@ -34,6 +34,15 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.ok(readmeZh.includes('全部 19 个技能'), 'Chinese README must distinguish autocomplete from the full catalog');
   assert.match(readme, /autocomplete is filtered/i);
   assert.match(readmeZh, /自动补全会按匹配项筛选/);
+  assert.match(readme, /language of the current user request/i);
+  assert.match(readme, /syncs applicable delta specs, and archives/i);
+  assert.match(readmeZh, /工件默认跟随用户当前请求的语言/);
+  assert.match(readmeZh, /自动验证、审查变更，同步适用的 delta spec 并归档/);
+  const applySkill = await readFile(join(repo, 'skills/openspec-apply-change/SKILL.md'), 'utf8');
+  const archiveSkill = await readFile(join(repo, 'skills/openspec-archive-change/SKILL.md'), 'utf8');
+  assert.match(applySkill, /all_done.*verified closure/s);
+  assert.match(archiveSkill, /Verified apply closure/);
+  assert.match(archiveSkill, /standalone archive only/);
   const delivery = await readFile(join(repo, 'skills/ai-workflow/references/delivery.md'), 'utf8');
   assert.match(delivery, /inspect the repository for a PR template/i);
   assert.match(delivery, /Summary.*Evidence.*Merge Danger/s);

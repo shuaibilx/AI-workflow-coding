@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "workflowVersion": "0.6.0",
+  "workflowVersion": "0.7.0",
   "runtime": { "minimumNodeVersion": "22.20.0" },
   "selectedAt": "2026-10-21",
   "skillsCli": { "version": "1.7.4" },

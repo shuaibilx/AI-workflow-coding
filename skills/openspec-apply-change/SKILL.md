@@ -66,7 +66,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - If `state: "blocked"`: show the message and pause implementation.
      - If `missingArtifacts` is non-empty: suggest completing the missing artifacts. Run `openspec status --change "<name>" --json`, select the next `ready` artifact (not `skipped` or `blocked`), and use `openspec instructions "<artifact-id>" --change "<name>" --json` for its rules and template. Keep the selected `--store <id>` on both commands.
      - Otherwise, follow the CLI instruction to create or repair the schema-configured tracking file from existing planning artifacts. Do not assume another artifact is ready or start implementation while blocked.
-   - If `state: "all_done"`: report that all tracked tasks are complete and suggest review or verification as appropriate before archiving
+   - If `state: "all_done"`: continue automatically into the verified closure below; do not stop at a handoff message
    - Otherwise: proceed to implementation
 
    Treat `context` as a required prompt-level input. Read and consider it, and
@@ -120,12 +120,24 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Error or blocker encountered → report and wait for guidance
    - User interrupts
 
-7. **On completion or pause, show status**
+7. **Automatically verify, review, sync, and archive after apply completion**
+
+   When all tracked tasks are complete, continue unless the user interrupts:
+
+   1. Load the AI Workflow verification and review instructions from `ai-workflow/references/review.md`. Run the project's relevant checks and acceptance scenarios, then review the complete bounded change on the Standards and Spec axes. If actionable findings are in scope, fix them, rerun affected checks, and review the fixes. If a check fails for an external or unresolved reason, the review cannot establish its baseline, or an issue needs a user decision, stop before archival and report the blocker.
+   2. Re-read OpenSpec status and task counts. Require all required artifacts and tracked tasks to be complete or legitimately skipped. If status is incomplete or inconsistent, leave the change active and report it.
+   3. Invoke `openspec-archive-change` for the selected change `<name>` with this exact handoff text: “verified apply closure: all tracked tasks complete; verification and Standards/Spec review passed; user authorized automatic delta sync and archive”. The archive workflow owns delta assessment, synchronization, verification, and the final move. Do not duplicate its merge or archive logic.
+   4. If delta specs need syncing, let the archive workflow sync and verify them before it archives. A conflict, failed sync, or mismatch stops closure and leaves the change active. If no sync is needed or the specs are already synced, archive after the remaining checks pass.
+   5. After the archive workflow reports success, verify that the archive path exists and the change is no longer active. Report the check results, review outcome, sync result, and archive path.
+
+   Do not start GitHub delivery from this skill alone. When this apply run is part of the main `ai-workflow` full workflow, return the archived result to that parent workflow, which owns the separately authorized GitHub delivery. A direct apply invocation ends after verified archival.
+
+8. **On completion or pause, show status**
 
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If all done: report that tracked tasks are complete and suggest review or verification as appropriate before archiving
+   - If all done: report verification, review, sync, and archive results; if closure paused, name the blocker and confirm the change remains active
    - If paused: explain why and wait for guidance
 
 **Output During Implementation**
@@ -156,8 +168,8 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tracked tasks are complete. Review or verify the change as appropriate
-before archiving. You can archive this change with `$openspec-archive-change (Codex) or /openspec-archive-change (other agents)`.
+All tracked tasks are complete. Verification, local review, applicable spec sync, and archive have completed.
+**Archived to:** <verified archive path>
 ```
 
 **Output On Pause (Issue Encountered)**
@@ -197,6 +209,8 @@ What would you like to do?
 - Consider every guidance entry; explain any inapplicable or conflicting advice
 - Do not copy runtime context or operation guidance into implementation files or planning artifacts
 - Preserve CLI-controlled blocked/ready/all-done behavior and completion criteria
+- Treat `all_done` as the start of verified closure, not as a completion response; archive only after checks, review, and applicable spec sync pass
+- If closure is blocked or interrupted, keep the change active and report its exact status
 
 **Fluid Workflow Integration**
 

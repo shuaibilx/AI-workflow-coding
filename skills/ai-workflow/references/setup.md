@@ -32,7 +32,7 @@ Only initialize the project the user selected. An uninitialized project is not a
 node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" init --project "<absolute-project-directory>"
 ```
 
-This delegates to `openspec init --tools none`. OpenSpec creates its project structure under the selected project, while the Plugin supplies the `openspec-*` skill guidance. Existing project-local OpenSpec skill copies from an earlier initialization remain untouched; explicitly select the bundled skills by their `ai-workflow:<skill-name>` identities.
+This delegates to `openspec init --tools none` when no OpenSpec root exists. OpenSpec creates its project structure under the selected project, while the Plugin supplies the `openspec-*` skill guidance. For a resolvable project-local root, the CLI adds a generic adaptive request-language `context` only when the config has no top-level `context`; it preserves all other config text and any existing context. It does not edit an external store or a symlinked config. Existing project-local OpenSpec skill copies from an earlier initialization remain untouched; explicitly select the bundled skills by their `ai-workflow:<skill-name>` identities.
 
 If a project already resolves to an OpenSpec root, reuse it. Invalid store pointers or unresolved existing `openspec/` data are errors to diagnose, not invitations to reinitialize. Existing projects do not need `openspec update` to use the Plugin-bundled skills.
 

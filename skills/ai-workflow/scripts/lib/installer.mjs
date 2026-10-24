@@ -146,6 +146,48 @@ async function checkDeliveryPrerequisites(run, log) {
   return { deliveryReady: prerequisites.every(({ available }) => available), deliveryPrerequisites: prerequisites };
 }
 
+const adaptiveLanguageContext = [
+  'context: |',
+  '  OpenSpec change artifacts follow the language used by the user in the current request unless they explicitly specify another language.',
+  '  Keep schema-required headings and keywords, identifiers, code, API names, and CLI commands in their required or original form.',
+].join('\n');
+const hasTopLevelContext = (content) => /^\uFEFF?context\s*:/m.test(content);
+
+async function addAdaptiveLanguageContext(projectRoot, { dryRun = false } = {}) {
+  const yamlPath = join(projectRoot, 'openspec', 'config.yaml');
+  const ymlPath = join(projectRoot, 'openspec', 'config.yml');
+  const configPath = await exists(yamlPath) ? yamlPath : await exists(ymlPath) ? ymlPath : null;
+  if (!configPath) {
+    if (!dryRun) await writeFile(yamlPath, `${adaptiveLanguageContext}\n`, { encoding: 'utf8', flag: 'wx' });
+    return true;
+  }
+
+  const info = await lstat(configPath);
+  if (info.isSymbolicLink() || !info.isFile()) {
+    throw new Error(`Refusing to modify a non-regular OpenSpec config: ${configPath}`);
+  }
+  const original = await readFile(configPath, 'utf8');
+  if (hasTopLevelContext(original)) return false;
+
+  if (dryRun) return true;
+  const newline = original.includes('\r\n') ? '\r\n' : '\n';
+  const separator = original.length === 0 || original.endsWith('\n') || original.endsWith('\r') ? '' : newline;
+  await writeFile(configPath, `${original}${separator}${adaptiveLanguageContext.replaceAll('\n', newline)}${newline}`, 'utf8');
+  return true;
+}
+
+async function isProjectLocalRoot(rootPath, projectRoot) {
+  if (typeof rootPath !== 'string' || !rootPath) return false;
+  let resolvedRoot;
+  try { resolvedRoot = await realpath(rootPath); }
+  catch { return false; }
+  const normalize = (path) => {
+    const absolute = resolve(path);
+    return process.platform === 'win32' ? absolute.toLowerCase() : absolute;
+  };
+  return normalize(resolvedRoot) === normalize(projectRoot);
+}
+
 async function initProject({ project, dryRun }, { run, log }) {
   if (!project) throw new Error('init requires --project <directory>; the current directory is never assumed.');
   const cwd = await realpath(resolve(project));
@@ -156,8 +198,14 @@ async function initProject({ project, dryRun }, { run, log }) {
   catch { throw new Error(`OpenSpec did not return valid project context: ${result.stderr || result.stdout}`); }
   if (context.root) {
     if (result.code !== 0) throw new Error(context.error?.message || context.message || 'OpenSpec project lookup failed');
-    log(`skip OpenSpec project: ${context.root.path || cwd}`);
-    return { ok: true, items: [{ name: 'openspec-project', action: 'skip' }] };
+    if (context.root.source === 'store' || !await isProjectLocalRoot(context.root.path, cwd)) {
+      log(`skip OpenSpec project configuration outside selected project: ${context.root.path || 'unresolved root'}`);
+      return { ok: true, items: [{ name: 'openspec-project', action: 'skip', detail: 'OpenSpec root is external to the selected project' }] };
+    }
+    const changed = await addAdaptiveLanguageContext(cwd, { dryRun });
+    const action = changed ? 'configure' : 'skip';
+    log(`${changed ? (dryRun ? 'would configure' : 'configure') : 'skip'} OpenSpec project language context: ${cwd}`);
+    return { ok: true, items: [{ name: 'openspec-project', action }] };
   }
   const detail = JSON.stringify(context.error || context);
   if (context.root !== null || await exists(join(cwd, 'openspec')) || /Declared in|Invalid store declaration/i.test(detail)) {
@@ -167,7 +215,12 @@ async function initProject({ project, dryRun }, { run, log }) {
   if (!dryRun) {
     await run('openspec', ['init', '--tools', 'none'], { cwd });
     const verified = await run('openspec', ['list', '--json'], { cwd });
-    if (!JSON.parse(verified.stdout).root) throw new Error('OpenSpec initialization did not produce a resolvable project');
+    const initialized = JSON.parse(verified.stdout);
+    if (verified.code !== 0 || !initialized.root || initialized.root.source === 'store' || !await isProjectLocalRoot(initialized.root.path, cwd)) {
+      throw new Error('OpenSpec initialization did not produce a project-local, resolvable root');
+    }
+    await addAdaptiveLanguageContext(cwd);
+    log(`configured adaptive OpenSpec artifact language: ${cwd}`);
   }
   return { ok: true, items: [{ name: 'openspec-project', action: 'init' }] };
 }
