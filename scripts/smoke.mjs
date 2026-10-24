@@ -48,7 +48,9 @@ try {
   const repeat = await run(installedEntry, ['install']);
   assert.equal(/^install /m.test(repeat.stdout), false, 'repeat install should only skip existing content');
   await run(installedEntry, ['init', '--project', project]);
-  await access(join(project, 'openspec', 'config.yaml'));
+  const openSpecConfig = await readFile(join(project, 'openspec', 'config.yaml'), 'utf8');
+  assert.match(openSpecConfig, /context: \|\n  OpenSpec change artifacts follow the language used by the user in the current request/);
+  assert.match(openSpecConfig, /Keep schema-required headings and keywords, identifiers, code, API names, and CLI commands/);
   const openSpecSkills = manifest.pluginSkills.filter(({ name }) => name.startsWith('openspec-'));
   assert.equal(openSpecSkills.length, 6, 'the Plugin should bundle the complete OpenSpec skill set');
   for (const { name } of openSpecSkills) {

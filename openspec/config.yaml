@@ -1,5 +1,9 @@
 schema: spec-driven
 
+context: |
+  OpenSpec change artifacts follow the language used by the user in the current request unless they explicitly specify another language.
+  Keep schema-required headings and keywords, identifiers, code, API names, and CLI commands in their required or original form.
+
 # Project context (optional)
 # Add only constraints that should guide OpenSpec artifacts and workflows.
 # Include constraints an agent cannot infer by reading the code.

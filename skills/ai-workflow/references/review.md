@@ -22,7 +22,7 @@ Fix blocking defects, rerun the checks affected by those fixes, and re-review th
 
 For a small fix with no OpenSpec change, finish with the changed behavior, checks, review result, and limitations; there is nothing to archive.
 
-For a full workflow, load `$ai-workflow:openspec-archive-change` only when:
+For a full workflow that has not delegated closure to `openspec-apply-change`, load `$ai-workflow:openspec-archive-change` only when:
 
 1. Required artifacts and tracked tasks are complete or legitimately skipped by the schema.
 2. Acceptance has been exercised, required checks pass, and review found no unresolved blocking defects.
@@ -30,6 +30,8 @@ For a full workflow, load `$ai-workflow:openspec-archive-change` only when:
 4. The user's implementation authorization includes synchronization and archival of this change.
 
 Within that already authorized scope, assess and display the spec merge, synchronize using `$ai-workflow:openspec-sync-specs` when required, verify the resulting main specs, and archive using the bundled workflow. An explicit authorization for this normal sync/archive path supplies the user's choice; do not ask it again. If the authorization was narrower, or a real conflict/incomplete state requires an exception, stop before that action and explain the precise source and available choices.
+
+When this reference is loaded by `openspec-apply-change` after tasks reach `all_done`, use it only for verification and local Standards/Spec review. Return the review result to apply; apply then invokes the archive workflow with the verified-closure handoff, and that skill alone performs delta assessment, synchronization, sync verification, and archive. Do not sync or archive inline here. When returning to the parent `ai-workflow`, report the verified archive result and continue only with GitHub delivery; do not duplicate checks, review, synchronization, or archival. If apply closure stops, leave the change active and pause delivery.
 
 Respect CLI-returned paths and store selection. Wait for spec synchronization to finish before moving a change. Confirm the archived path exists and the selected change is no longer active. Keep failed checks or unresolved spec conflicts visible; never force archive to make the workflow appear complete.
 

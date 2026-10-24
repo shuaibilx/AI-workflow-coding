@@ -10,6 +10,8 @@ AI Workflow Plugin redistributes the upstream Agent Skills listed below. Each co
 | `create-pull-request` | [cline/cline](https://github.com/cline/cline), main-branch snapshot retrieved 2026-10-23 | Apache-2.0, see [license text](licenses/Apache-2.0-cline.txt). |
 | `babysit-pr` | [openai/codex](https://github.com/openai/codex), main-branch snapshot retrieved 2026-10-23 | Apache-2.0, see [license text](licenses/Apache-2.0-openai-codex.txt). |
 
+AI Workflow locally adapts the bundled OpenSpec guidance in `openspec-propose`, `openspec-apply-change`, and `openspec-archive-change`: artifact content follows the current request language, and verified apply completion can automatically sync and archive after all gates pass. These edits preserve the upstream workflow structure and remain under the upstream MIT license.
+
 The fallback PR-body guidance in `skills/ai-workflow/references/delivery.md` adapts material from Dex Horthy's [`show-me`](https://github.com/humanlayer/humanlayer) skill, reproduced in the former `pr` dependency and aimed at a change diff. HumanLayer's contribution is under Apache-2.0; see the [license text](licenses/Apache-2.0-humanlayer.txt).
 
 The Plugin also contains original `ai-workflow` and `ai-workflow-setup` skills under the repository's MIT license. The authoritative names, provenance, version pins, and snapshot dates are recorded in [the dependency manifest](skills/ai-workflow/config/dependencies.json).

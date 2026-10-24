@@ -4,7 +4,7 @@ description: Coordinate a Codex AI development workflow from requirements and te
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.6.0"
+  version: "0.7.0"
 ---
 
 # AI Workflow
@@ -34,13 +34,14 @@ Carry confirmed decisions through verified delivery. Respond in the user's langu
 | Select skills | Read relevant bundled candidates before design is finalized; discover stack-specific skills only when justified | [skill-selection.md](references/skill-selection.md) |
 | Propose | OpenSpec artifacts capture confirmed decisions and the single implementation plan; present them and wait for implementation authorization | [implementation.md](references/implementation.md) |
 | Implement | Read `codebase-design`; follow the approved tasks and update progress truthfully | [implementation.md](references/implementation.md) |
-| Verify and review | Actual check results and separate Standards/Spec review findings, with fixes and rechecks | [review.md](references/review.md) |
-| Close and deliver | Sync/archive a complete OpenSpec change, draft PR text, then perform authorized full-workflow GitHub delivery | [review.md](references/review.md), [delivery.md](references/delivery.md) |
+| Verified closure | When apply reports `all_done`, it runs checks, Standards/Spec review, delta sync, and archive; failures leave the change active | [review.md](references/review.md) |
+| Deliver | After apply reports verified archival, draft PR text and perform authorized full-workflow GitHub delivery | [delivery.md](references/delivery.md) |
 
 ## Coordination rules
 
 - All fixed workflow skills ship in this Plugin. Resolve each skill through the Codex Plugin catalog and invoke it by its `ai-workflow:<skill-name>` identity when a phase needs it; do not download another copy. Technology-specific skills are dynamic: discover only those that fit the selected stack, review them before finalizing the proposal, then install the chosen project skill after the proposal is ready and implementation is authorized.
 - Reuse confirmed decisions. `$ai-workflow:openspec-explore` is conditional and does not create state required by `$ai-workflow:openspec-propose`.
+- On `openspec-apply-change`'s `all_done` state, consume its verified closure result; do not rerun review or archive. A blocked or interrupted closure leaves the change active and pauses delivery.
 - Keep OpenSpec artifacts as the only durable implementation plan. Plan mode is optional and only helps resolve complex pre-proposal decisions; transfer useful conclusions into OpenSpec.
 - For a full workflow, draft PR text from verified change evidence using the template precedence and fallback format in [delivery.md](references/delivery.md), then follow the standing full-workflow GitHub authorization: task-only commit, push, PR, COMMENT-only AI review, current-session monitoring, and repository-rule-compliant auto-merge. If `gh` or auth is unavailable, finish local work and pause the remote part.
 - Small fixes do not auto-publish or auto-merge. Follow [delivery.md](references/delivery.md) only if the user separately asks for GitHub operations.
