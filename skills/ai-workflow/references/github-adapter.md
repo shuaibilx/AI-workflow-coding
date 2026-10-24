@@ -14,7 +14,7 @@ Read this adapter together with the complete bundled upstream skill when perform
 - On Windows, use PowerShell 7 (`pwsh`). Translate shell examples to PowerShell; do not invoke Windows PowerShell 5.1. Use temporary files created by `New-TemporaryFile`, write UTF-8 content, pass their literal paths to `gh`, then remove only those exact files in `finally`.
 - On Windows, pass an explicit `--state-file` to every `gh_pr_watch.py` invocation; derive it from `$env:TEMP` (for example, `Join-Path $env:TEMP 'codex-babysit-pr-<repo>-pr<number>.json'`) because the upstream default uses `/tmp`.
 - Inspect repository rules, default branch, PR templates, required checks, merge queue, and allowed merge method. Do not override them.
-- Stage only reviewed task paths, preserve all unrelated changes, and never force-push or bypass protection.
+- Stage only reviewed task paths and preserve all unrelated changes. Never force-push commits or bypass protection. The exact-SHA `--force-with-lease` delete refspec in [delivery.md](delivery.md) is allowed only to conditionally delete the already-merged task branch; it must never rewrite or overwrite a branch tip.
 - After a full-workflow PR is confirmed merged, follow the post-merge branch cleanup policy in [delivery.md](delivery.md). Do not apply it to unrelated or unmerged PR branches.
 - The workflow allows up to three retries for failures assessed as likely flaky. Fixes attributable to the current task branch may be committed and pushed after local verification.
 - Post the AI review only with COMMENT state. APPROVE and REQUEST_CHANGES require the user's explicit response.
