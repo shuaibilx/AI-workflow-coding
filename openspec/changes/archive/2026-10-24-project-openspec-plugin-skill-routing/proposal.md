@@ -20,6 +20,7 @@ None.
 ### Modified Capabilities
 
 - `workflow-orchestration`: initialize selected projects without generating duplicate OpenSpec skills and route to bundled OpenSpec skills.
+- `plugin-skill-distribution`: keep OpenSpec CLI globally available while relying on bundled Plugin skills instead of generated project-local copies.
 
 ## Impact
 

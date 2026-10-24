@@ -10,6 +10,7 @@
 - [x] 2.1 Update the workflow router and planning, implementation, review, setup, and setup-skill guidance to select Plugin-namespaced OpenSpec skills explicitly; confirm no active instructions still recommend project-generated OpenSpec skill copies.
 - [x] 2.2 Update English and Chinese README invocation guidance, OpenSpec location behavior, existing-project preservation, and Plugin refresh steps; verify both languages show the same behavior.
 - [x] 2.3 Update architecture and publishing docs to describe `openspec init --tools none` and Plugin skill invocation/refresh; search active docs for stale `--tools codex` instructions.
+- [x] 2.4 Synchronize the `workflow-orchestration` and `plugin-skill-distribution` main specs; verify no active requirement expects generated project-local OpenSpec skills.
 
 ## 3. Plugin package version
 
