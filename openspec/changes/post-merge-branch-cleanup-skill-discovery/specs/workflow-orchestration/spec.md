@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Merged full-workflow PRs clean up their remote task branch
-After GitHub confirms that a full-workflow PR is merged, the workflow SHALL delete that PR's remote task branch when it still points to the merged PR head. The workflow SHALL leave repository-wide branch deletion settings unchanged.
+After GitHub confirms that a full-workflow PR is merged, the workflow SHALL delete that PR's remote task branch only when it still points to the merged PR head at the point of deletion. The workflow SHALL leave repository-wide branch deletion settings unchanged.
 
 #### Scenario: Merged PR still has its task branch
 - **WHEN** the full-workflow PR is merged and its same-repository remote task branch still points to the PR head SHA
@@ -16,6 +16,10 @@ After GitHub confirms that a full-workflow PR is merged, the workflow SHALL dele
 #### Scenario: PR did not merge or its head moved
 - **WHEN** the PR is open or closed without merge, or its task branch no longer points to the merged PR head SHA
 - **THEN** the workflow preserves the remote branch and reports why cleanup was skipped
+
+#### Scenario: Remote task branch advances during cleanup
+- **WHEN** the remote task branch advances after it was checked but before the conditional deletion is applied
+- **THEN** the deletion is rejected, the workflow preserves the advanced branch, and reports that the ref moved
 
 ### Requirement: Merged local task branches return to an updated default branch when safe
 After a full-workflow PR is merged, the workflow SHALL switch the clean local checkout to its default branch, fast-forward it from the matching remote, and remove the local task branch only when the local task head matches the merged PR head and no local changes or commits would be lost.

@@ -34,6 +34,9 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.ok(readmeZh.includes('全部 21 个技能'), 'Chinese README must distinguish autocomplete from the full catalog');
   assert.match(readme, /autocomplete is filtered/i);
   assert.match(readmeZh, /自动补全会按匹配项筛选/);
+  const delivery = await readFile(join(repo, 'skills/ai-workflow/references/delivery.md'), 'utf8');
+  assert.ok(delivery.includes('--force-with-lease=refs/heads/<head-branch>:<pr-head-sha>'),
+    'remote task-branch cleanup must be conditional on the merged PR head');
   const packed = JSON.parse((await runCommand('npm', ['pack', '--dry-run', '--json'], { cwd: repo })).stdout)[0];
   const paths = new Set(packed.files.map(({ path }) => path));
   assert.equal([...paths].some((path) => path.startsWith('.agents/skills/openspec-')), false,
