@@ -22,14 +22,14 @@ Fix blocking defects, rerun the checks affected by those fixes, and re-review th
 
 For a small fix with no OpenSpec change, finish with the changed behavior, checks, review result, and limitations; there is nothing to archive.
 
-For a full workflow, load `openspec-archive-change` only when:
+For a full workflow, load `$ai-workflow:openspec-archive-change` only when:
 
 1. Required artifacts and tracked tasks are complete or legitimately skipped by the schema.
 2. Acceptance has been exercised, required checks pass, and review found no unresolved blocking defects.
 3. Planning artifacts match the implementation and no required task is merely deferred.
 4. The user's implementation authorization includes synchronization and archival of this change.
 
-Within that already authorized scope, assess and display the spec merge, synchronize using `openspec-sync-specs` when required, verify the resulting main specs, and archive using the generated workflow. An explicit authorization for this normal sync/archive path supplies the user's choice; do not ask it again. If the authorization was narrower, or a real conflict/incomplete state requires an exception, stop before that action and explain the precise source and available choices.
+Within that already authorized scope, assess and display the spec merge, synchronize using `$ai-workflow:openspec-sync-specs` when required, verify the resulting main specs, and archive using the bundled workflow. An explicit authorization for this normal sync/archive path supplies the user's choice; do not ask it again. If the authorization was narrower, or a real conflict/incomplete state requires an exception, stop before that action and explain the precise source and available choices.
 
 Respect CLI-returned paths and store selection. Wait for spec synchronization to finish before moving a change. Confirm the archived path exists and the selected change is no longer active. Keep failed checks or unresolved spec conflicts visible; never force archive to make the workflow appear complete.
 

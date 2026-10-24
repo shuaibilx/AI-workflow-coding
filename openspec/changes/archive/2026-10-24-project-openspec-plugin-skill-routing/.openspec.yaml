@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-24
+goal: Keep project OpenSpec data inside the selected project, avoid duplicate
+  OpenSpec skills there, and document correct Codex discovery and invocation.

@@ -17,6 +17,7 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
   assert.equal(compatibility.name, portable.name);
   assert.equal(compatibility.version, portable.version);
   assert.equal(portable.version, pkg.version);
+  assert.equal(pkg.version, '0.5.0');
   assert.deepEqual(compatibility.interface, portable.extensions['com.openai'].interface);
   const entry = marketplace.plugins.find(({ name }) => name === portable.name);
   assert.ok(entry, 'the plugin must be addressable from its marketplace');
@@ -34,6 +35,10 @@ test('the npm artifact contains manifests, the main skill, bundled skills, and t
     assert.ok(paths.has(path), `missing plugin resource in npm artifact: ${path}`);
   }
   const manifest = JSON.parse(await readFile(join(repo, 'skills/ai-workflow/config/dependencies.json'), 'utf8'));
+  assert.equal(manifest.workflowVersion, pkg.version);
+  for (const path of ['skills/ai-workflow/SKILL.md', 'skills/ai-workflow-setup/SKILL.md']) {
+    assert.match(await readFile(join(repo, path), 'utf8'), new RegExp(`version: "${pkg.version}"`));
+  }
   const bundledNames = manifest.pluginSkills.map(({ name }) => name);
   assert.deepEqual(bundledNames, [
     'grilling', 'find-skills', 'codebase-design', 'code-review', 'pr',

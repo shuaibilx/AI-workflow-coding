@@ -91,6 +91,8 @@ $ai-workflow:ai-workflow Help me clarify and propose a CSV export feature in thi
 
 The bundled dependencies are also available by name, including `$ai-workflow:grilling`, `$ai-workflow:openspec-propose`, `$ai-workflow:tdd`, `$ai-workflow:create-pull-request`, and `$ai-workflow:babysit-pr`. The main workflow selects them at the relevant stages; call one directly when you want that skill alone.
 
+In Codex, open `/skills` to browse installed skills, or invoke one directly with `$ai-workflow:<skill-name>`, such as `$ai-workflow:openspec-propose`. Typing `/ai workflow` selects a matching workflow entry; it is not the complete skill inventory. Codex loads skills from the installed Plugin version, not from this repository's source folder. If a bundled skill is missing, update the marketplace, reinstall the Plugin, and start a new chat using the commands below.
+
 ```mermaid
 flowchart LR
     A[Install Plugin] --> W["Start a task<br/><b>ai-workflow</b>"]
@@ -149,7 +151,7 @@ $ai-workflow:ai-workflow Continue the existing CSV export change from its curren
 
 ## What gets installed
 
-The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) and all 19 fixed workflow dependency skills. Codex can discover all of them under the `ai-workflow` namespace as soon as the Plugin is installed. The OpenSpec CLI is a separate global npm executable installed automatically by the setup skill when a full workflow needs it. Stack-specific skills are discovered per project:
+The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) and all 19 fixed workflow dependency skills. Codex discovers the skills shipped in its currently installed package under the `ai-workflow` namespace. The OpenSpec CLI is a separate global npm executable installed automatically by the setup skill when a full workflow needs it. Stack-specific skills are discovered per project:
 
 | Item | Location / behavior |
 | --- | --- |
@@ -157,7 +159,8 @@ The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) 
 | Setup skill and CLI | Plugin installation; full workflows check prerequisites and install only a missing OpenSpec CLI |
 | Standalone AI Workflow (alternative install) | User `.agents/skills/ai-workflow`; Plugin setup does not create or replace it |
 | OpenSpec CLI | npm global; an existing CLI is preserved |
-| OpenSpec project files and generated `openspec-*` skills | Initialized with `openspec init --tools codex` under the project's default paths; preserved alongside Plugin copies |
+| OpenSpec project files | Initialized with `openspec init --tools none`; the project's `openspec/` directory remains under the selected project, without generating duplicate `openspec-*` skills |
+| Existing project-local OpenSpec skills | Preserved when a project was initialized earlier; select Plugin copies with `$ai-workflow:<skill-name>` |
 | Stack-specific skills | Discovered for the selected project and installed to its `.agents/skills/` only when the proposal is ready and implementation is authorized |
 | `setup-matt-pocock-skills` | Optional, user-invoked repository onboarding; not an OpenSpec prerequisite |
 | Installer ownership record | User `.ai-workflow/state.json`; separate from the skills CLI's own lock |
@@ -177,7 +180,7 @@ codex plugin marketplace upgrade ai-workflow-coding
 codex plugin add ai-workflow@ai-workflow-coding
 ```
 
-Restart Codex or open a new chat afterward. A local-path marketplace reads your checkout instead: update that checkout and reinstall. Bundled skill updates arrive with a Plugin release. The CLI's `update --plugin` manages only an OpenSpec CLI installation previously created by the installer; it does not download or update skills.
+Restart Codex or open a new chat afterward. A local-path marketplace reads your checkout instead: update that checkout and reinstall. The Plugin release version identifies the installed bundle; updating the source repository alone does not replace a cached Plugin. The CLI's `update --plugin` manages only an OpenSpec CLI installation previously created by the installer; it does not download or update skills.
 
 For manual Plugin diagnostics or setup, resolve its installed directory and run `node "<plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin` or `setup --plugin`. The `--plugin` flag requires a valid package, checks that fixed skills are bundled, and prevents copying or updating standalone global skills. Do not hardcode a versioned cache path in automation.
 

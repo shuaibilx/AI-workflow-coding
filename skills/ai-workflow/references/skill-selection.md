@@ -32,7 +32,7 @@ Use these triggers to decide which additional skills belong in a task's proposal
 
 `code-review` covers the local branch/PR diff against Standards and Spec before delivery. After PR creation, the workflow may publish its actionable review as a GitHub COMMENT only. Ask before submitting APPROVE or REQUEST_CHANGES. Repository initialization (`git init`) is handled by [delivery.md](delivery.md), not a reason to install a low-fit skill.
 
-Do not route to `prototype` in this workflow. Use `openspec-explore` for unresolved design questions.
+Do not route to `prototype` in this workflow. Use `$ai-workflow:openspec-explore` for unresolved design questions.
 
 Summarize the selected names, sources, version/ref when available, purpose, and relevant conflicts in the proposal's design. Reopen a technology decision only if the new evidence materially changes its tradeoffs.
 

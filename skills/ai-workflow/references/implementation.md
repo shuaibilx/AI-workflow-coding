@@ -17,13 +17,13 @@ Follow the selected skills at their relevant seams. With `tdd`, use only the use
 
 ## Execute the selected route
 
-For a full change, load and follow `openspec-apply-change`. Query current status and apply instructions, then read the CLI's concrete context paths. Respect blocked states, custom schemas, selected stores, and incomplete artifacts. Do not infer readiness from a single `tasks.md` or file-existence status.
+For a full change, load and follow `$ai-workflow:openspec-apply-change` from the installed Plugin. Query current status and apply instructions, then read the CLI's concrete context paths. Respect blocked states, custom schemas, selected stores, and incomplete artifacts. Do not infer readiness from a single `tasks.md` or file-existence status.
 
 Implement coherent task-sized changes, keeping progress truthful. Run checks proportional to each change; behavior changes need meaningful verification, while prose or mechanical edits may need inspection/build checks rather than implementation-shaped tests.
 
 Where a test-first workflow is already required by the project or selected skills, follow it. Do not install a new testing methodology globally just because this workflow was invoked.
 
-When implementation reveals a material requirement or design change, use `openspec-update-change` to reconcile planning artifacts before implementing that expansion. Minor implementation choices within the agreed behavior can be recorded without reopening every decision. Do not check off deferred work as completed.
+When implementation reveals a material requirement or design change, use `$ai-workflow:openspec-update-change` to reconcile planning artifacts before implementing that expansion. Minor implementation choices within the agreed behavior can be recorded without reopening every decision. Do not check off deferred work as completed.
 
 For a small fix, apply the same relevant code and verification standards directly, using the stated acceptance criterion as the review source.
 

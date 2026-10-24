@@ -4,7 +4,7 @@
 
 Read repository guidance, relevant implementation and tests, existing specs, build configuration, and project constraints. Establish whether this is a new project or a change to existing behavior. Inspect facts the environment can answer; reserve user questions for goals, tradeoffs, and acceptance decisions.
 
-Before entering the full route, use `ai-workflow-setup` to run the Plugin setup preflight described in [setup.md](setup.md). When Git is available, create or reuse the task branch before any tracked project setup or change artifacts, following [delivery.md](delivery.md). Then treat the user's current project request as selecting that project: resolve its OpenSpec root and, if none exists, initialize it with the bundled CLI's `init --project <absolute-project-directory>`. This delegates to `openspec init --tools codex` and preserves generated `.agents/skills/openspec-*` files. Missing GitHub CLI/authentication pauses only the eventual remote-delivery phase; do not install those tools automatically.
+Before entering the full route, use `$ai-workflow:ai-workflow-setup` to run the Plugin setup preflight described in [setup.md](setup.md). When Git is available, create or reuse the task branch before any tracked project setup or change artifacts, following [delivery.md](delivery.md). Then treat the user's current project request as selecting that project: resolve its OpenSpec root and, if none exists, initialize it with the bundled CLI's `init --project <absolute-project-directory>`. This delegates to `openspec init --tools none`, creates OpenSpec data under the selected project, and leaves OpenSpec skill guidance to the Plugin bundle. Missing GitHub CLI/authentication pauses only the eventual remote-delivery phase; do not install those tools automatically.
 
 Plan mode is an optional host mode, not a workflow prerequisite or a second plan document. Use it when the task is still underspecified, risky, or likely to touch several systems and an implementation path would help before the OpenSpec proposal. Skip it when the confirmed requirements and repository facts already give `openspec-propose` enough direction. Carry any useful Plan mode reasoning into the proposal; the approved OpenSpec artifacts and tasks remain the single durable implementation plan. If the host does not expose Plan mode controls, continue with ordinary planning and do not claim that the mode changed.
 
@@ -24,7 +24,7 @@ Follow the invoked skill's actual interview and shared-understanding rules. Pres
 
 ## Investigate unknowns with explore
 
-Use the project's generated `openspec-explore` only when codebase facts, feasibility, or competing designs still need investigation. It is not a required predecessor of propose and does not establish hidden CLI session state. Reuse the grilling record as input, investigate the remaining questions, and transfer any new decisions back into the summary.
+Use `$ai-workflow:openspec-explore` only when codebase facts, feasibility, or competing designs still need investigation. It is not a required predecessor of propose and does not establish hidden CLI session state. Reuse the grilling record as input, investigate the remaining questions, and transfer any new decisions back into the summary.
 
 When both requirements and the implementation approach are sufficiently clear, skip explore and explain that the investigation is already complete. No new empty change or duplicate interview is needed.
 
@@ -42,7 +42,7 @@ Apply the task-specific planning triggers from `skill-selection.md` before propo
 
 ## Capture one authoritative plan
 
-Resolve and read the project's `openspec-propose`. Pass the confirmed decision summary and candidate skill selection into it. Use CLI-returned roots, schema requirements, and output paths; do not assume artifacts always live in the code repo.
+Resolve and read `$ai-workflow:openspec-propose` from the installed Plugin. Pass the confirmed decision summary and candidate skill selection into it. Use CLI-returned roots, schema requirements, and output paths; do not assume artifacts always live in the code repo.
 
 For the normal spec-driven schema, transfer:
 

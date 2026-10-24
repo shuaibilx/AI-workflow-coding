@@ -91,6 +91,8 @@ $ai-workflow:ai-workflow 帮我澄清并规划当前项目的 CSV 导出功能�
 
 也可以单独调用已打包的依赖，例如 `$ai-workflow:grilling`、`$ai-workflow:openspec-propose`、`$ai-workflow:tdd`、`$ai-workflow:create-pull-request` 和 `$ai-workflow:babysit-pr`。主工作流会在对应阶段选择它们；只有想单独使用某个技能时，才需要直接调用。
 
+在 Codex 中输入 `/skills` 可浏览当前已安装的技能，也可以用 `$ai-workflow:<skill-name>` 直接调用插件内技能，例如 `$ai-workflow:openspec-propose`。输入 `/ai workflow` 会匹配相关工作流入口，但不会列出全部技能。Codex 加载的是已安装的 Plugin 版本，不会直接读取仓库源代码目录中的 `skills/`。如果缺少某个已打包技能，请按下方命令更新 marketplace 并重装 Plugin，然后开启新对话。
+
 ```mermaid
 flowchart LR
     A[安装 Plugin] --> W["开始开发任务<br/><b>ai-workflow</b>"]
@@ -149,7 +151,7 @@ $ai-workflow:ai-workflow 从现有状态继续 CSV 导出变更。
 
 ## 安装了什么
 
-Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 19 个固定工作流依赖 skill。安装后 Codex 即可通过 `ai-workflow` 命名空间发现它们。OpenSpec CLI 是单独的 npm 全局可执行程序：完整流程通过 setup 在缺少时自动安装。技术栈专用技能按项目发现：
+Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 19 个固定工作流依赖 skill。Codex 会通过 `ai-workflow` 命名空间发现当前已安装版本所包含的技能。OpenSpec CLI 是单独的 npm 全局可执行程序：完整流程通过 setup 在缺少时自动安装。技术栈专用技能按项目发现：
 
 | 内容 | 位置与行为 |
 | --- | --- |
@@ -157,7 +159,8 @@ Plugin 携带两个自有 skill（`ai-workflow`、`ai-workflow-setup`）和 19 �
 | Setup skill 和 CLI | 插件安装目录；完整流程检查依赖，仅在缺少时全局安装 OpenSpec CLI |
 | 独立版 AI Workflow（另一安装方式） | 用户 `.agents/skills/ai-workflow`；Plugin 不会创建或替换它 |
 | OpenSpec CLI | npm 全局；保留已有 CLI |
-| OpenSpec 项目文件和生成的 `openspec-*` skills | 使用 `openspec init --tools codex` 写入项目默认路径；与 Plugin 内副本并存，不做删除或重定向 |
+| OpenSpec 项目文件 | 使用 `openspec init --tools none` 初始化；项目的 `openspec/` 目录仍位于选定项目中，不再生成重复的 `openspec-*` skills |
+| 既有项目级 OpenSpec skills | 对早期初始化生成的副本予以保留；使用 `$ai-workflow:<skill-name>` 选择 Plugin 内副本 |
 | 技术栈专用技能 | 按当前项目发现；提案就绪且获准实施后安装到项目 `.agents/skills/` |
 | `setup-matt-pocock-skills` | 可选、由用户主动调用的一次性仓库引导；不是 OpenSpec 的前置条件 |
 | 安装器的托管记录 | 用户 `.ai-workflow/state.json`，与 skills CLI 的锁文件分开 |
@@ -177,7 +180,7 @@ codex plugin marketplace upgrade ai-workflow-coding
 codex plugin add ai-workflow@ai-workflow-coding
 ```
 
-更新后重启 Codex 或开启新对话。本地路径 marketplace 则读取你的 checkout，需要先更新 checkout 再重新安装。内置技能随 Plugin 发布更新；CLI 的 `update --plugin` 只管理此前由安装器安装的 OpenSpec CLI，不会下载或更新 skills。
+更新后重启 Codex 或开启新对话。本地路径 marketplace 则读取你的 checkout，需要先更新 checkout 再重新安装。Plugin 发布版本决定当前安装的技能包；只更新源代码仓库不会替换 Codex 缓存的 Plugin。CLI 的 `update --plugin` 只管理此前由安装器安装的 OpenSpec CLI，不会下载或更新 skills。
 
 手动诊断或设置 Plugin 时，先确定实际安装目录，再运行 `node "<plugin-path>/skills/ai-workflow/scripts/cli.mjs" doctor --plugin` 或 `setup --plugin`。`--plugin` 要求有效的插件包、检查固定 skills 是否完整，并避免复制或更新独立全局 skills；自动化脚本中不要写死带版本号的缓存路径。
 
