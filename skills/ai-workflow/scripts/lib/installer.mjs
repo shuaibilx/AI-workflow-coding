@@ -165,7 +165,7 @@ async function initProject({ project, dryRun }, { run, log }) {
   }
   log(`${dryRun ? 'would initialize' : 'initialize'} OpenSpec: ${cwd}`);
   if (!dryRun) {
-    await run('openspec', ['init', '--tools', 'codex'], { cwd });
+    await run('openspec', ['init', '--tools', 'none'], { cwd });
     const verified = await run('openspec', ['list', '--json'], { cwd });
     if (!JSON.parse(verified.stdout).root) throw new Error('OpenSpec initialization did not produce a resolvable project');
   }

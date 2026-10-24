@@ -33,10 +33,10 @@ The same skill directories serve Plugin and standalone skill distribution; the n
 | `ai-workflow-setup` | Local readiness and delivery-prerequisite preflight | `setup --plugin --json`; missing OpenSpec CLI install |
 | Fixed bundled skills | Clarification, skill discovery, OpenSpec phases, conditional engineering, local review, PR authoring and GitHub operations | Loaded by Codex from Plugin `skills/` |
 | AI Workflow CLI | Package completeness, OpenSpec CLI readiness, standalone dependency install/update, explicit project init | npm, skills CLI, Git, `gh`, OpenSpec |
-| OpenSpec | Change artifacts, task state, spec synchronization and archive | CLI-generated project-local skills and CLI |
+| OpenSpec | Change artifacts, task state, spec synchronization and archive | Global CLI; project data lives under the selected project |
 | Stack-specific skills | Project technology guidance | Found with `find-skills`, selected after review |
 
-The setup CLI distinguishes local readiness (`ok`) from remote delivery readiness (`deliveryReady`). It installs only the pinned OpenSpec CLI if missing. It never installs Git/`gh`, copies Plugin skills to global paths, or removes the default `.agents/skills/openspec-*` created by project initialization.
+The setup CLI distinguishes local readiness (`ok`) from remote delivery readiness (`deliveryReady`). It installs only the pinned OpenSpec CLI if missing. It never installs Git/`gh`, copies Plugin skills to global paths, or removes project-local skills created by earlier OpenSpec initialization. New project initialization uses `--tools none` and leaves OpenSpec skills to the Plugin bundle.
 
 ## CLI contract
 
@@ -47,7 +47,7 @@ The setup CLI distinguishes local readiness (`ok`) from remote delivery readines
 | `install --plugin --dry-run --json` | Preview OpenSpec CLI installation; never download bundled skills |
 | `install --plugin` | Install only the missing OpenSpec CLI |
 | `update --plugin` | Update only an OpenSpec installation previously managed by this installer |
-| `init --project <directory>` | Initialize only the named project using `openspec init --tools codex`; preserve generated project-local skills |
+| `init --project <directory>` | Initialize only the named project using `openspec init --tools none`; create project OpenSpec data without generating duplicate project-local skills |
 
 Without `--plugin`, the standalone installer retains its separate contract: install/update the main skill, five global baseline dependencies, and a missing OpenSpec CLI. It does not claim to install the Plugin's entire runtime dependency set globally.
 
@@ -62,6 +62,6 @@ The reference implementation is OpenSpec 1.14.3:
 - [`bin/openspec.js`](https://github.com/Fission-AI/OpenSpec/blob/v1.14.3/bin/openspec.js) and [`src/cli/index.ts`](https://github.com/Fission-AI/OpenSpec/blob/v1.14.3/src/cli/index.ts) separate command entry/presentation from operations. Our `bin` and bundled CLI follow that split without a build step.
 - [`src/commands/workflow/instructions.ts`](https://github.com/Fission-AI/OpenSpec/blob/v1.14.3/src/commands/workflow/instructions.ts) provides machine-readable inputs while skills guide how to use them. Our setup helper consumes deterministic JSON from the CLI.
 - [`src/core/templates/workflows/`](https://github.com/Fission-AI/OpenSpec/tree/v1.14.3/src/core/templates/workflows) separates phase-specific guidance. Our router loads focused `references/` on demand.
-- [`src/core/shared/skill-generation.ts`](https://github.com/Fission-AI/OpenSpec/blob/v1.14.3/src/core/shared/skill-generation.ts) generates project-local skills. AI Workflow preserves this default behavior and keeps its bundled copies alongside them.
+- [`src/core/shared/skill-generation.ts`](https://github.com/Fission-AI/OpenSpec/blob/v1.14.3/src/core/shared/skill-generation.ts) generates project-local skills when an integration is selected. AI Workflow selects `none` so its installed Plugin remains the single source for OpenSpec skill guidance.
 
 OpenSpec's schemas, artifact engine, store support, and multi-tool generators already own their workflow. AI Workflow coordinates fixed skills and GitHub delivery around them; its CLI stays focused on dependency readiness and explicit project setup. It does not add a second plan engine, MCP server, or performance evaluation system.

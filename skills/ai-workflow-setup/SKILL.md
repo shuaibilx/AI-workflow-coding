@@ -4,7 +4,7 @@ description: Prepare and verify local OpenSpec and GitHub prerequisites for an A
 license: MIT
 metadata:
   author: shuaibilx
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # AI Workflow setup
@@ -42,4 +42,4 @@ For read-only checks, use `doctor --plugin --json`. Do not initialize a project 
 node "<plugin-root>/skills/ai-workflow/scripts/cli.mjs" init --project "<absolute-project-directory>"
 ```
 
-OpenSpec's generated Codex skills remain under the project's default `.agents/skills/` directory. Preserve them even though the Plugin also bundles OpenSpec skills.
+Initialize the selected project with `openspec init --tools none`. OpenSpec's project data stays in that project's `openspec/` directory; the Plugin supplies OpenSpec skill guidance under its own namespace. Existing `.agents/skills/openspec-*` copies from earlier initialization remain untouched; call the bundled copy by its `$ai-workflow:<skill-name>` identity.

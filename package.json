@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-coding",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Codex AI Workflow Plugin with bundled workflow skills and an OpenSpec CLI setup helper",
   "type": "module",

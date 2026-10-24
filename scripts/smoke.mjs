@@ -49,8 +49,12 @@ try {
   assert.equal(/^install /m.test(repeat.stdout), false, 'repeat install should only skip existing content');
   await run(installedEntry, ['init', '--project', project]);
   await access(join(project, 'openspec', 'config.yaml'));
-  await access(join(project, '.agents', 'skills', 'openspec-propose', 'SKILL.md'));
-  console.log('Smoke passed: complete bundled Plugin skills without global copies, local/global readiness separation, real pinned standalone downloads, standard skills lock, repeat install, and OpenSpec default project skill generation.');
+  const openSpecSkills = manifest.pluginSkills.filter(({ name }) => name.startsWith('openspec-'));
+  assert.equal(openSpecSkills.length, 6, 'the Plugin should bundle the complete OpenSpec skill set');
+  for (const { name } of openSpecSkills) {
+    await assert.rejects(access(join(project, '.agents', 'skills', name, 'SKILL.md')));
+  }
+  console.log(`Smoke passed: complete bundled Plugin skills without global copies, local/global readiness separation, real pinned standalone downloads, standard skills lock, repeat install, and OpenSpec data under ${project} without generated project skills.`);
 } finally {
   // root is a unique directory created by this script, never a user-provided path.
   if (resolve(root).startsWith(resolve(tmpdir()) + (process.platform === 'win32' ? '\\' : '/'))) {
