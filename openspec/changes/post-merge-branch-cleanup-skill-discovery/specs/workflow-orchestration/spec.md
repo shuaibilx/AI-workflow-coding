@@ -22,7 +22,7 @@ After GitHub confirms that a full-workflow PR is merged, the workflow SHALL dele
 - **THEN** the deletion is rejected, the workflow preserves the advanced branch, and reports that the ref moved
 
 ### Requirement: Merged local task branches return to an updated default branch when safe
-After a full-workflow PR is merged, the workflow SHALL switch the clean local checkout to its default branch, fast-forward it from the matching remote, and remove the local task branch only when the local task head matches the merged PR head and no local changes or commits would be lost.
+After a full-workflow PR is merged, the workflow SHALL switch the clean local checkout to its default branch, fast-forward it from the matching remote, and remove the local task branch only when it still matches the merged PR head at the point of deletion and no local changes or commits would be lost.
 
 #### Scenario: Local checkout is safe to clean
 - **WHEN** the PR is merged, the worktree is clean, the local task head matches the PR head, and the local default branch can fast-forward to its remote
@@ -31,3 +31,7 @@ After a full-workflow PR is merged, the workflow SHALL switch the clean local ch
 #### Scenario: Local checkout cannot be cleaned safely
 - **WHEN** the worktree is dirty, the task branch has local-only commits, the default branch cannot fast-forward, or the checkout cannot safely switch
 - **THEN** the workflow leaves the local checkout and task branch intact and reports the recovery state
+
+#### Scenario: Local task branch advances during cleanup
+- **WHEN** the local task branch advances after it was checked but before the conditional deletion is applied
+- **THEN** the deletion is rejected, the workflow preserves the advanced branch, and reports that the local ref moved

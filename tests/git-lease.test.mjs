@@ -5,7 +5,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-test('expected-SHA leases preserve an advanced remote task branch and delete an unchanged one', async (t) => {
+test('expected-SHA guards preserve advanced task refs and delete unchanged refs', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'workflow-git-lease-'));
   t.after(() => rm(root, { recursive: true, force: true }));
 
@@ -49,13 +49,17 @@ test('expected-SHA leases preserve an advanced remote task branch and delete an 
   runGit(checkout, ['push', 'origin', 'moved-task']);
   const movedHead = runGit(checkout, ['rev-parse', 'HEAD']).stdout;
 
+  runGit(checkout, ['checkout', 'main']);
+  const staleLocalDelete = runGit(checkout, ['update-ref', '-d', 'refs/heads/moved-task', expectedHead], { allowFailure: true });
+  assert.notEqual(staleLocalDelete.status, 0, 'local deletion with the old PR SHA must be rejected');
+  assert.equal(runGit(checkout, ['rev-parse', 'refs/heads/moved-task']).stdout, movedHead);
+
   const staleDelete = runGit(checkout, [
     `push`, `--force-with-lease=refs/heads/moved-task:${expectedHead}`, 'origin', ':refs/heads/moved-task',
   ], { allowFailure: true });
   assert.notEqual(staleDelete.status, 0, 'deletion with the old PR SHA must be rejected');
   assert.match(runGit(checkout, ['ls-remote', 'origin', 'refs/heads/moved-task']).stdout, new RegExp(`^${movedHead}\\s`));
 
-  runGit(checkout, ['checkout', 'main']);
   runGit(checkout, ['checkout', '-b', 'unchanged-task']);
   await writeFile(join(checkout, 'state.txt'), 'unchanged PR head\n');
   runGit(checkout, ['commit', '-am', 'unchanged task']);
@@ -65,4 +69,7 @@ test('expected-SHA leases preserve an advanced remote task branch and delete an 
     'push', `--force-with-lease=refs/heads/unchanged-task:${unchangedHead}`, 'origin', ':refs/heads/unchanged-task',
   ]);
   assert.equal(runGit(checkout, ['ls-remote', 'origin', 'refs/heads/unchanged-task']).stdout, '');
+  runGit(checkout, ['checkout', 'main']);
+  runGit(checkout, ['update-ref', '-d', 'refs/heads/unchanged-task', unchangedHead]);
+  assert.equal(runGit(checkout, ['branch', '--list', 'unchanged-task']).stdout, '');
 });
