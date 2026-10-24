@@ -12,7 +12,7 @@
 
 </div>
 
-AI Workflow Plugin brings a guided development workflow to Codex: clarify requirements, choose technology and relevant skills, plan with OpenSpec, implement, verify, review, and deliver a GitHub PR. It packages the modular `ai-workflow` skill, all 19 fixed workflow dependency skills, a setup skill, and a CLI. It carries decisions between stages and scales the process to the task.
+AI Workflow Plugin brings a guided development workflow to Codex: clarify requirements, choose technology and relevant skills, plan with OpenSpec, implement, verify, review, and deliver a GitHub PR. It packages the modular `ai-workflow` skill, 17 fixed workflow dependency skills, a setup skill, and a CLI. It carries decisions between stages and scales the process to the task.
 
 ## Why this exists
 
@@ -38,16 +38,13 @@ flowchart LR
     B --> C["1. Clarify<br/><span style='color:#174ea6'><b>grilling</b></span> · requirements<br/><span style='color:#174ea6'><b>Plan mode</b></span> · complex work<br/><span style='color:#174ea6'><b>openspec-explore</b></span> · unresolved facts"]:::stage
     C --> P["2. Plan + propose<br/><span style='color:#174ea6'><b>find-skills</b></span> · stack skill discovery<br/><span style='color:#174ea6'><b>research</b></span> · uncertain external facts<br/><span style='color:#174ea6'><b>domain-modeling</b></span> · lasting terms/decisions<br/><span style='color:#174ea6'><b>codebase-design</b></span> · interfaces<br/><span style='color:#174ea6'><b>openspec-propose</b></span> · decisions + tasks"]:::stage
     P -->|User requests implementation| I["3. Implement<br/><span style='color:#174ea6'><b>openspec-apply-change</b></span> · tasks<br/><span style='color:#174ea6'><b>tdd</b></span> · agreed test seams<br/><span style='color:#174ea6'><b>diagnosing-bugs</b></span> · hard bugs/perf regressions<br/><span style='color:#174ea6'><b>writing-for-agents</b></span> · agent docs only"]:::stage
-    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes<br/><span style='color:#174ea6'><b>pr</b></span> · PR body"]:::stage
+    I --> V["4. Verify + close<br/>Checks · behavior<br/><span style='color:#174ea6'><b>code-review</b></span> · standards + spec<br/><span style='color:#174ea6'><b>sync + archive</b></span> · full changes<br/><span style='color:#174ea6'><b>ai-workflow</b></span> · template or fallback PR body"]:::stage
     G -->|Small fix| I
     V -->|Fix and recheck| I
     V -->|Full workflow| D["5. Deliver<br/><span style='color:#174ea6'><b>create-pull-request</b></span> · task-only commit/push + PR<br/>COMMENT-only AI review"]:::stage
     D --> M["6. Monitor in this Codex session<br/><span style='color:#174ea6'><b>babysit-pr</b></span> · CI + branch fixes<br/>Enable auto-merge by repo rules"]:::stage
-    G -.->|Opt-in repository conventions| R["Optional onboarding<br/><span style='color:#174ea6'><b>setup-matt-pocock-skills</b></span> · tracker + domain docs"]:::optional
-    R -.-> C
     classDef start fill:#ffffff,stroke:#64748b,color:#334155,stroke-width:1.5px
     classDef stage fill:#f8fafc,stroke:#cbd5e1,color:#334155,stroke-width:1.5px
-    classDef optional fill:#fff7ed,stroke:#f97316,color:#7c2d12,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 Blue labels identify skills and tools; regular text describes their role and trigger. A small fix skips OpenSpec, setup, and automatic GitHub delivery. Full workflows run setup and create/reuse a task branch before tracked artifacts. If GitHub prerequisites are missing, local work can finish while publishing pauses. Stack-specific skills are discovered per project; all fixed workflow skills are already bundled.
@@ -61,10 +58,9 @@ Plan mode is an optional Codex aid for complex, risky, or underspecified work; i
 | Clarify | `grilling`; Codex Plan mode (optional); `openspec-explore` (when unknowns remain) | Clarify scope and acceptance; reason through complex paths; investigate unresolved repository facts or feasibility. |
 | Plan and propose | `find-skills`; `research` and `domain-modeling` (when triggered); `codebase-design`; `openspec-propose` | Assess candidates before the proposal; capture cited research, durable domain language, test seams, decisions, and tasks where relevant. |
 | Implement | `openspec-apply-change`; `tdd` or `diagnosing-bugs` (when triggered); `writing-for-agents` (agent docs only); `codebase-design` | Execute tasks with confirmed test seams, a disciplined bug loop, or agent-document guidance as appropriate. |
-| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change`; `pr` | Verify behavior, review standards and spec locally, fix and recheck findings, sync/archive full changes, then draft PR text. |
+| Verify and close | Checks; `code-review`; `openspec-sync-specs`; `openspec-archive-change`; `ai-workflow` | Verify behavior, review standards and spec locally, fix and recheck findings, sync/archive full changes, then draft PR text from the repository template or documented fallback. |
 | Full-workflow delivery | `create-pull-request` | Commit only reviewed task files, push, and create a PR after the full workflow passes local checks/review. |
 | PR review and monitoring | `code-review`; `babysit-pr` | Post AI findings as COMMENT only; monitor CI and review feedback in the current Codex session, fix branch-caused issues, and enable repo-rule auto-merge when eligible. |
-| Optional onboarding | `setup-matt-pocock-skills` (explicit user opt-in) | Configure the broader Matt Pocock repository conventions once; it is not required for OpenSpec. |
 
 ## Quick start
 
@@ -91,7 +87,7 @@ $ai-workflow:ai-workflow Help me clarify and propose a CSV export feature in thi
 
 The bundled dependencies are also available by name, including `$ai-workflow:grilling`, `$ai-workflow:openspec-propose`, `$ai-workflow:tdd`, `$ai-workflow:create-pull-request`, and `$ai-workflow:babysit-pr`. The main workflow selects them at the relevant stages; call one directly when you want that skill alone.
 
-In Codex, open `/skills` to browse the installed skill catalog, including all 21 skills bundled by this Plugin. Invoke one directly with `$ai-workflow:<skill-name>`, such as `$ai-workflow:openspec-propose`. The `/ai workflow` autocomplete is filtered to matching entries; it does not enumerate all bundled skills. Codex loads skills from the installed Plugin version, not from this repository's source folder. If a bundled skill is missing, update the marketplace, reinstall the Plugin, and start a new chat using the commands below.
+In Codex, open `/skills` to browse the installed skill catalog, including all 19 skills bundled by this Plugin (two first-party skills and 17 fixed dependencies). Invoke one directly with `$ai-workflow:<skill-name>`, such as `$ai-workflow:openspec-propose`. The `/ai workflow` autocomplete is filtered to matching entries; it does not enumerate all bundled skills. Codex loads skills from the installed Plugin version, not from this repository's source folder. If a bundled skill is missing, update the marketplace, reinstall the Plugin, and start a new chat using the commands below.
 
 ```mermaid
 flowchart LR
@@ -151,23 +147,22 @@ $ai-workflow:ai-workflow Continue the existing CSV export change from its curren
 
 ## What gets installed
 
-The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) and all 19 fixed workflow dependency skills. Codex discovers the skills shipped in its currently installed package under the `ai-workflow` namespace. The OpenSpec CLI is a separate global npm executable installed automatically by the setup skill when a full workflow needs it. Stack-specific skills are discovered per project:
+The Plugin contains two first-party skills (`ai-workflow`, `ai-workflow-setup`) and 17 fixed workflow dependency skills, for 19 skills total. Codex discovers the skills shipped in its currently installed package under the `ai-workflow` namespace. The OpenSpec CLI is a separate global npm executable installed automatically by the setup skill when a full workflow needs it. Stack-specific skills are discovered per project:
 
 | Item | Location / behavior |
 | --- | --- |
-| Main workflow and 19 fixed skills | Codex-managed Plugin installation under `skills/`; updated with the Plugin |
+| Main workflow and 17 fixed dependencies | Codex-managed Plugin installation under `skills/`; updated with the Plugin |
 | Setup skill and CLI | Plugin installation; full workflows check prerequisites and install only a missing OpenSpec CLI |
 | Standalone AI Workflow (alternative install) | User `.agents/skills/ai-workflow`; Plugin setup does not create or replace it |
 | OpenSpec CLI | npm global; an existing CLI is preserved |
 | OpenSpec project files | Initialized with `openspec init --tools none`; the project's `openspec/` directory remains under the selected project, without generating duplicate `openspec-*` skills |
 | Existing project-local OpenSpec skills | Preserved when a project was initialized earlier; select Plugin copies with `$ai-workflow:<skill-name>` |
 | Stack-specific skills | Discovered for the selected project and installed to its `.agents/skills/` only when the proposal is ready and implementation is authorized |
-| `setup-matt-pocock-skills` | Optional, user-invoked repository onboarding; not an OpenSpec prerequisite |
 | Installer ownership record | User `.ai-workflow/state.json`; separate from the skills CLI's own lock |
 
-The fixed bundle includes `grilling`, `find-skills`, `codebase-design`, `code-review`, `pr`; six OpenSpec skills; `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`, `setup-matt-pocock-skills`; and `create-pull-request`, `babysit-pr`. Sources, revisions/snapshot dates, and licenses are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Refresh the Plugin to update bundled skills; standalone installations continue to update from their original sources.
+The 17 fixed dependencies are `grilling`, `find-skills`, `codebase-design`, `code-review`; six OpenSpec skills; `tdd`, `diagnosing-bugs`, `research`, `domain-modeling`, `writing-for-agents`; and `create-pull-request`, `babysit-pr`. Sources, revisions/snapshot dates, and licenses are declared in [dependencies.json](skills/ai-workflow/config/dependencies.json) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Refresh the Plugin to update bundled skills; standalone installations continue to update from their original sources.
 
-On full workflows, `pr` drafts a PR body from the final diff and verified evidence; `create-pull-request` commits only task files, pushes the task branch, and creates the PR. `code-review` results are published as a COMMENT review. The workflow asks before APPROVE or REQUEST_CHANGES, monitors through merge/close in the current Codex session, fixes branch-caused problems, and enables auto-merge only under repository rules. After merge it removes the remote task branch when its head still matches the PR; it syncs the local default branch and removes the local task branch only when safe, otherwise preserving and reporting the checkout. If GitHub is not ready, local work completes and remote delivery pauses. When no remote exists, the workflow asks for repository name and visibility before creating it. `setup-matt-pocock-skills` remains opt-in; it keeps issue tracking for backlog/triage and does not replace OpenSpec's change plan. Other conditional skills activate only when their triggers fit.
+On full workflows, `ai-workflow` drafts the PR body from verified evidence, following the repository template when present or using Summary, Evidence, and Merge Danger otherwise; `create-pull-request` commits only task files, pushes the task branch, and creates the PR. `code-review` results are published as a COMMENT review. The workflow asks before APPROVE or REQUEST_CHANGES, monitors through merge/close in the current Codex session, fixes branch-caused problems, and enables auto-merge only under repository rules. After merge it removes the remote task branch when its head still matches the PR; it syncs the local default branch and removes the local task branch only when safe, otherwise preserving and reporting the checkout. If GitHub is not ready, local work completes and remote delivery pauses. When no remote exists, the workflow asks for repository name and visibility before creating it. Other conditional skills activate only when their triggers fit.
 
 Existing unmanaged skills are reused and preserved, including during dependency updates. A directory's presence does not establish its provenance or compatibility. The installer records ownership only for dependencies it installs and detects edits before updating managed content.
 
@@ -198,7 +193,7 @@ Update standalone skills installed with the `skills` CLI by name. These commands
 
 ```sh
 npx --yes --package=skills@1.7.4 skills update ai-workflow --global --yes
-npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review pr --global --yes
+npx --yes --package=skills@1.7.4 skills update find-skills codebase-design code-review --global --yes
 ```
 
 `skills update` uses the source recorded when each skill was installed. For a manually installed skill without a recorded source, such as `grilling`, refresh it by adding it again from its repository:

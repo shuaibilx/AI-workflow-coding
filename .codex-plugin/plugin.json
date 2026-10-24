@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "A Codex development workflow with bundled skills, OpenSpec planning, implementation, and review.",
   "author": { "name": "shuaibilx" },
   "skills": "./skills/",

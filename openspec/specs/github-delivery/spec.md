@@ -61,3 +61,14 @@ After creating a PR, the workflow SHALL monitor it until merged or closed, may r
 #### Scenario: Monitoring session is interrupted
 - **WHEN** the active Codex session ends before the PR is merged or closed
 - **THEN** the workflow reports the PR state and can resume monitoring from that PR in a later session
+
+### Requirement: PR descriptions follow repository conventions
+For a full workflow, the AI Workflow SHALL draft the PR description from verified change evidence and follow the repository's PR template when one exists.
+
+#### Scenario: Repository provides a PR template
+- **WHEN** the workflow prepares a PR for a repository with a PR template
+- **THEN** it fills the template using verified change details and preserves the template structure
+
+#### Scenario: Repository has no PR template
+- **WHEN** the workflow prepares a PR and no repository template exists
+- **THEN** it drafts concise Summary, Evidence, and Merge Danger sections, including merge direction and blast radius

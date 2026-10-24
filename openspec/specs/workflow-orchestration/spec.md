@@ -47,6 +47,17 @@ The workflow SHALL route to bundled fixed skills at the phases where their guida
 - **WHEN** implementation is authorized to begin
 - **THEN** the workflow reads codebase-design and invokes conditional skills such as TDD, debugging, research, domain modeling, or agent-document writing only when their triggers apply
 
+### Requirement: Code review uses available project intent without setup
+When the workflow performs a code review, it SHALL use the originating OpenSpec requirements or other task requirements supplied by the user as the Spec review source and SHALL NOT require optional repository-convention setup.
+
+#### Scenario: OpenSpec requirements are available
+- **WHEN** a review is run for a change with OpenSpec requirements
+- **THEN** the Spec review evaluates the diff against those requirements without requiring issue-tracker setup
+
+#### Scenario: No review requirements are available
+- **WHEN** a standalone review has no OpenSpec requirements or user-provided task criteria
+- **THEN** the workflow reports that no Spec source is available and asks for one only if a Spec review is required
+
 ### Requirement: OpenSpec initialization keeps project data local and uses bundled skills
 When initializing a selected project, the workflow SHALL create OpenSpec project data in that project without generating duplicate project-local OpenSpec skill copies.
 
